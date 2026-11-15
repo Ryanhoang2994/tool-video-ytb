@@ -101,7 +101,7 @@ thiếu nguồn**, khớp hình–lời, âm lượng (LUFS, đỉnh). Mục kh�
 Cần: Python 3.10+ (Windows: tick "Add to PATH"), Git, ffmpeg (script cài tự cài trên Windows bằng winget).
 
 ```bat
-git clone https://github.com/<TÀI_KHOẢN>/<TÊN_REPO>.git coldcase_studio
+git clone https://github.com/Ryanhoang2994/tool-video-ytb.git coldcase_studio
 cd coldcase_studio
 install_windows.bat
 ```
