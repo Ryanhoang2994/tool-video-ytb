@@ -1,0 +1,24 @@
+# Lõi
+requests>=2.31
+pyyaml>=6.0
+pillow>=10.0
+numpy>=1.24
+beautifulsoup4>=4.12
+python-dotenv>=1.0
+# Viết kịch bản bằng Claude (cần ANTHROPIC_API_KEY)
+anthropic>=2.8
+# Giọng đọc
+vieneu>=3.8            # giọng Việt mã nguồn mở rất tự nhiên (mặc định)
+edge-tts>=7.0          # online, miễn phí, giọng Neural tự nhiên (EN + VI)
+piper-tts>=1.3         # offline, chạy CPU
+# Xuất draft CapCut
+pycapcut==0.0.4
+# Tuỳ chọn:
+# trafilatura          # đọc bài báo từ URL tốt hơn
+# sentence-transformers # AI CLIP chấm điểm ảnh khớp nội dung (tuỳ chọn, nặng ~600MB)
+# yt-dlp               # tải video từ link bạn CÓ QUYỀN dùng
+# kokoro soundfile     # Kokoro TTS tiếng Anh offline (backend: kokoro)
+# coqui-tts            # XTTS-v2 / viXTTS (clone giọng, cần GPU)
+
+# Tuỳ chọn: tách nền người trong ảnh cho kiểu cắt dán (look: collage) giống hình cắt dán thật
+# rembg

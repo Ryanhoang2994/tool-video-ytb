@@ -1,0 +1,49 @@
+# Tâm lý học đời thường bằng nhân vật 2D
+description: "Tâm lý học đời thường - nhân vật 2D cố định, biểu cảm, bong bóng suy nghĩ, từ khoá, so sánh bên ngoài/bên trong"
+channel:
+  target_minutes: 10
+script:
+  chapters: 6
+  style: "Kể như một phim hoạt hình ngắn: câu ngắn, cụ thể, đồng cảm; có nhân vật, biến cố, giằng xé nội tâm và khoảnh khắc nhận ra."
+  visual_types: ["character", "atmosphere", "diagram"]
+  system: |
+    Bạn là biên kịch kênh YouTube tâm lý học đời thường bằng nhân vật hoạt hình 2D (không lộ mặt).
+    Nội dung: hành vi, cảm xúc, thói quen, giao tiếp, trải nghiệm giữa các thế hệ.
+    CẤU TRÚC: (1) một tình huống quen thuộc -> (2) nhân vật gặp vấn đề -> (3) giải thích các nguyên nhân CÓ THỂ liên
+    quan (dẫn nghiên cứu/khái niệm tâm lý có trong tư liệu) -> (4) minh hoạ bằng vài tình huống khác nhau ->
+    (5) gợi ý cách nhìn hoặc cách ứng xử thực tế.
+    - Có căn cứ; dùng từ "có thể", "một số nghiên cứu cho thấy". KHÔNG gán tính cách hay chẩn đoán bệnh chỉ từ một hành
+      vi. Không thay thế lời khuyên của chuyên gia; khi chạm vấn đề nghiêm trọng, khuyên tìm hỗ trợ chuyên môn.
+    - Hầu hết cảnh dùng visual_type "character": điền character.expression/pose/position, thought (bong bóng suy nghĩ),
+      keywords (1-3 từ khoá hiện đúng lúc); dùng outside/inside cho cảnh "bên ngoài mỉm cười, bên trong lo lắng".
+      image_prompt_en CHỈ tả bối cảnh trống (quán cà phê, phòng ngủ, văn phòng...), KHÔNG có người.
+    - Kể qua câu chuyện của MỘT người cụ thể (đặt tên, tuổi, hoàn cảnh); phần giải thích tâm lý đan vào giữa câu chuyện,
+      không tách thành bài giảng. Giọng thân thiện, câu ngắn. sound: "cafe"/"office"/"night"/"rain"/"none".
+media:
+  mode: "ai_only"
+  ai_style_suffix: ""
+render:
+  look: "bright"
+  card_style: "bold_light"
+  brand: "default"
+  burn_subtitles: true
+  subtitle_style: "story"   # chữ kể chuyện viết tay phía trên khung (story) | bottom (phụ đề thường)
+  chapter_style: "overlay"  # tên chương hiện đè lên cảnh, lời kể không dừng (overlay | card | none)
+  auto_music_style: "light"
+edit:
+  fog: false
+  flicker: false
+  age_photos: false
+  zoom: 0.07
+  transition: "cut"
+  motions: ["push_in", "pull_out", "pan_lr", "pan_rl", "punch", "hold"]
+  print_rate: 0
+  circle_rate: 0
+  torch_rate: 0
+  flash_rate: 0
+  hook_pace: 0.7
+sfx:
+  type: 0.0
+  riser: 0.12
+voice:
+  vieneu_voice: "Thanh Bình"

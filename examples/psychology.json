@@ -1,0 +1,164 @@
+{
+ "title": "Vì sao chúng ta hay trì hoãn?",
+ "title_line1": "TÂM LÝ HỌC ĐƠN GIẢN",
+ "title_line2": "VÌ SAO TA HAY TRÌ HOÃN?",
+ "thumbnail_text": "VÌ SAO BẠN LUÔN ĐỂ MAI?",
+ "youtube_titles": [
+  "Vì sao chúng ta hay trì hoãn? Tâm lý học đơn giản"
+ ],
+ "description": "Trì hoãn không phải vì lười. Hãy cùng anh Tròn tìm hiểu bộ não đang làm gì.",
+ "tags": [
+  "tâm lý học",
+  "trì hoãn",
+  "procrastination"
+ ],
+ "sources_used": [],
+ "chapters": [
+  {
+   "title": "Không phải vì lười",
+   "scenes": [
+    {
+     "narration": "Đã bao giờ bạn định làm một việc quan trọng, rồi cuối cùng lại ngồi lướt điện thoại suốt hai tiếng? Đừng lo, bạn không hề lười đâu.",
+     "on_screen_text": "",
+     "visual_type": "character",
+     "search_queries_en": [],
+     "image_prompt_en": "an empty cozy living room at night, sofa with a glowing phone on it, a pile of unfinished papers on a desk, warm lamp light",
+     "purpose": "hook",
+     "character": {
+      "expression": "nervous",
+      "pose": "hold",
+      "position": "left",
+      "thought": "Mai làm cũng được mà...",
+      "outside": "",
+      "inside": "",
+      "keywords": [
+       "LƯỚT ĐIỆN THOẠI 2 TIẾNG"
+      ]
+     },
+     "sound": "night",
+     "camera": "auto",
+     "action": ""
+    },
+    {
+     "narration": "Gặp anh Tròn. Sáng nay anh Tròn có một bản báo cáo cần nộp. Nhưng vừa mở máy tính ra, anh lại thấy cần pha một ly cà phê, dọn bàn, rồi xem nốt một video.",
+     "on_screen_text": "",
+     "visual_type": "character",
+     "search_queries_en": [],
+     "image_prompt_en": "an empty modern office desk with a laptop, a coffee cup and a smartphone, morning light through the window, no people",
+     "purpose": "giới thiệu nhân vật",
+     "character": {
+      "expression": "thinking",
+      "pose": "think",
+      "position": "left",
+      "thought": "Pha ly cà phê trước đã...",
+      "outside": "",
+      "inside": "",
+      "keywords": [
+       "BÁO CÁO",
+       "CÀ PHÊ",
+       "VIDEO MÈO"
+      ]
+     },
+     "sound": "office",
+     "camera": "auto",
+     "action": ""
+    },
+    {
+     "narration": "Các nhà tâm lý học gọi đây là trì hoãn. Và nguyên nhân thật sự nằm ở cảm xúc, chứ không phải ở thời gian.",
+     "on_screen_text": "",
+     "visual_type": "character",
+     "search_queries_en": [],
+     "image_prompt_en": "a bright simple classroom with an empty whiteboard, no people",
+     "purpose": "nêu nguyên nhân",
+     "character": {
+      "expression": "surprised",
+      "pose": "point",
+      "position": "right",
+      "thought": "",
+      "outside": "",
+      "inside": "",
+      "keywords": [
+       "CẢM XÚC",
+       "KHÔNG PHẢI THỜI GIAN"
+      ]
+     },
+     "sound": "none",
+     "camera": "auto",
+     "action": ""
+    }
+   ]
+  },
+  {
+   "title": "Bộ não đang tránh né điều gì?",
+   "scenes": [
+    {
+     "narration": "Khi một việc khiến ta thấy chán, sợ làm sai, hay quá mơ hồ, bộ não coi nó như một mối đe doạ nhỏ. Và nó tìm cách chạy trốn, bằng những việc dễ chịu hơn ngay lúc này.",
+     "on_screen_text": "",
+     "visual_type": "character",
+     "search_queries_en": [],
+     "image_prompt_en": "a calm office background, soft light, no people",
+     "purpose": "giải thích cơ chế",
+     "character": {
+      "expression": "",
+      "pose": "stand",
+      "position": "left",
+      "thought": "",
+      "outside": "smile",
+      "inside": "worried",
+      "keywords": [
+       "NÉ CẢM GIÁC KHÓ CHỊU"
+      ]
+     },
+     "sound": "none",
+     "camera": "auto",
+     "action": ""
+    },
+    {
+     "narration": "Mẹo đơn giản nhất: chia việc thật nhỏ. Thay vì viết cả bản báo cáo, anh Tròn chỉ hứa với mình viết đúng hai phút. Bắt đầu được rồi, việc tiếp theo dễ hơn nhiều.",
+     "on_screen_text": "",
+     "visual_type": "character",
+     "search_queries_en": [],
+     "image_prompt_en": "a tidy home office desk with a small sand timer and a laptop, sunny, no people",
+     "purpose": "gợi ý cách ứng xử",
+     "character": {
+      "expression": "happy",
+      "pose": "cheer",
+      "position": "center",
+      "thought": "Chỉ 2 phút thôi!",
+      "outside": "",
+      "inside": "",
+      "keywords": [
+       "CHIA NHỎ VIỆC",
+       "2 PHÚT"
+      ]
+     },
+     "sound": "none",
+     "camera": "auto",
+     "action": ""
+    },
+    {
+     "narration": "Lần tới khi muốn để mai làm, hãy hỏi mình: mình đang né cảm giác gì? Còn bạn, việc bạn hay trì hoãn nhất là gì? Kể cho mình nghe ở phần bình luận nhé.",
+     "on_screen_text": "",
+     "visual_type": "character",
+     "search_queries_en": [],
+     "image_prompt_en": "a warm living room at sunset, empty sofa, plants, no people",
+     "purpose": "kết luận + kêu gọi",
+     "character": {
+      "expression": "smile",
+      "pose": "wave",
+      "position": "right",
+      "thought": "",
+      "outside": "",
+      "inside": "",
+      "keywords": [
+       "BẠN HAY TRÌ HOÃN VIỆC GÌ?"
+      ]
+     },
+     "sound": "none",
+     "camera": "auto",
+     "action": ""
+    }
+   ]
+  }
+ ]
+}

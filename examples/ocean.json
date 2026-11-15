@@ -1,0 +1,178 @@
+{
+ "title": "Cá mập Greenland săn mồi thế nào?",
+ "title_line1": "KHÁM PHÁ ĐẠI DƯƠNG",
+ "title_line2": "CÁ MẬP GREENLAND",
+ "thumbnail_text": "CÁ MẬP CHẬM NHẤT THẾ GIỚI",
+ "youtube_titles": [],
+ "description": "",
+ "tags": [],
+ "sources_used": [
+  "Wikipedia: Greenland shark"
+ ],
+ "chapters": [
+  {
+   "title": "Kẻ săn mồi chậm chạp",
+   "scenes": [
+    {
+     "narration": "Hãy tưởng tượng bạn đang lặn dưới lớp băng Bắc Cực. Nước lạnh gần không độ, và từ bóng tối phía dưới, một cái bóng khổng lồ chậm rãi trồi lên.",
+     "purpose": "hook",
+     "on_screen_text": "",
+     "visual_type": "atmosphere",
+     "action": "",
+     "camera": "pull_out",
+     "sound": "underwater",
+     "entity": {
+      "name": "",
+      "role": "",
+      "search_query_en": ""
+     },
+     "character": {
+      "expression": "",
+      "pose": "stand",
+      "position": "left",
+      "thought": "",
+      "outside": "",
+      "inside": "",
+      "keywords": []
+     },
+     "figures": [],
+     "diagram": {
+      "type": "none",
+      "subject": "",
+      "size_m": 0,
+      "depth_m": 0
+     },
+     "sources": [],
+     "search_queries_en": [
+      "Greenland shark",
+      "Somniosus microcephalus"
+     ],
+     "image_prompt_en": "dark freezing arctic water under sea ice, faint light from above, a huge shadow of a shark rising from the deep"
+    },
+    {
+     "narration": "Đó là cá mập Greenland. Nó có thể dài hơn sáu mét, gấp ba lần một người thợ lặn.",
+     "purpose": "so sánh kích thước",
+     "on_screen_text": "",
+     "visual_type": "diagram",
+     "action": "",
+     "camera": "hold",
+     "sound": "underwater",
+     "entity": {
+      "name": "",
+      "role": "",
+      "search_query_en": ""
+     },
+     "character": {
+      "expression": "",
+      "pose": "stand",
+      "position": "left",
+      "thought": "",
+      "outside": "",
+      "inside": "",
+      "keywords": []
+     },
+     "figures": [
+      {
+       "label": "Chiều dài tối đa",
+       "value": 6.4,
+       "unit": "m",
+       "formula": "",
+       "source": "Wikipedia: Greenland shark",
+       "verified": true
+      }
+     ],
+     "diagram": {
+      "type": "size_compare",
+      "subject": "Cá mập Greenland",
+      "size_m": 6.4,
+      "depth_m": 0
+     },
+     "sources": [
+      "Wikipedia: Greenland shark"
+     ],
+     "search_queries_en": [],
+     "image_prompt_en": ""
+    },
+    {
+     "narration": "Chúng sống ở độ sâu tới hơn hai nghìn mét, nơi ánh sáng mặt trời không bao giờ chạm tới.",
+     "purpose": "độ sâu sinh sống",
+     "on_screen_text": "",
+     "visual_type": "diagram",
+     "action": "",
+     "camera": "push_in",
+     "sound": "underwater",
+     "entity": {
+      "name": "",
+      "role": "",
+      "search_query_en": ""
+     },
+     "character": {
+      "expression": "",
+      "pose": "stand",
+      "position": "left",
+      "thought": "",
+      "outside": "",
+      "inside": "",
+      "keywords": []
+     },
+     "figures": [
+      {
+       "label": "Độ sâu",
+       "value": 2200,
+       "unit": "m",
+       "formula": "",
+       "source": "Wikipedia: Greenland shark",
+       "verified": true
+      }
+     ],
+     "diagram": {
+      "type": "depth_chart",
+      "subject": "Cá mập Greenland",
+      "size_m": 0,
+      "depth_m": 2200
+     },
+     "sources": [
+      "Wikipedia: Greenland shark"
+     ],
+     "search_queries_en": [],
+     "image_prompt_en": ""
+    },
+    {
+     "narration": "Nếu gặp nó, người thợ lặn gần như không gặp nguy hiểm. Chưa có vụ tấn công người nào được xác nhận.",
+     "purpose": "chạm trán giả định",
+     "on_screen_text": "",
+     "visual_type": "character",
+     "action": "",
+     "camera": "push_in",
+     "sound": "underwater",
+     "entity": {
+      "name": "",
+      "role": "",
+      "search_query_en": ""
+     },
+     "character": {
+      "expression": "surprised",
+      "pose": "hold",
+      "position": "right",
+      "thought": "Nó... bơi chậm thật!",
+      "outside": "",
+      "inside": "",
+      "keywords": [
+       "CHƯA CÓ VỤ TẤN CÔNG NÀO"
+      ]
+     },
+     "figures": [],
+     "diagram": {
+      "type": "none",
+      "subject": "",
+      "size_m": 0,
+      "depth_m": 0
+     },
+     "sources": [],
+     "search_queries_en": [],
+     "image_prompt_en": "dark blue arctic underwater scene, ice above, empty, light rays"
+    }
+   ]
+  }
+ ]
+}

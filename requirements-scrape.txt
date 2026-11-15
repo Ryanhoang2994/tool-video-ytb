@@ -1,0 +1,8 @@
+# Bộ cài NHẸ cho VPS chỉ dùng để cào tư liệu, ảnh, video, ảnh AI (không giọng đọc, không render)
+requests>=2.31
+pyyaml>=6.0
+pillow>=10.0
+numpy>=1.24
+beautifulsoup4>=4.12
+python-dotenv>=1.0
+anthropic>=2.8          # nếu muốn viết kịch bản ngay trên VPS

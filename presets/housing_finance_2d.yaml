@@ -1,0 +1,50 @@
+# Nhà ở, bất động sản, tài chính bằng hoạt hình 2D
+description: "Nhà ở/bất động sản/tài chính - nhân vật 2D, biểu đồ & bảng chi phí dựng từ số liệu, kiểm tra phép tính"
+channel:
+  target_minutes: 10
+script:
+  chapters: 6
+  style: "Mạch lạc, dễ hiểu, từng bước; ưu tiên người xem theo kịp số liệu."
+  visual_types: ["character", "chart", "diagram", "atmosphere"]
+  system: |
+    Bạn là biên kịch kênh YouTube giải thích nhà ở, bất động sản và tài chính cá nhân bằng hoạt hình 2D.
+    Nội dung: khả năng mua nhà, tiền thuê, khoản vay, chi phí sở hữu, yếu tố ảnh hưởng giá nhà.
+    CẤU TRÚC: (1) đặt một câu hỏi cụ thể -> (2) giới thiệu nhân vật/hộ gia đình GIẢ ĐỊNH -> (3) trình bày thu nhập và
+    các GIẢ ĐỊNH (lãi suất, kỳ hạn, % trả trước, thuế, bảo hiểm...) -> (4) giải thích từng khoản chi, từng phép tính ->
+    (5) so sánh các phương án (vd thuê vs mua) -> (6) kết luận THEO ĐIỀU KIỆN đã nêu.
+    - BẮT BUỘC dùng đúng quốc gia, đơn vị tiền tệ, thời điểm dữ liệu trong THÔNG TIN VIDEO; nhắc thời điểm dữ liệu.
+    - MỌI con số vào figures: số lấy từ tư liệu -> source + verified=true; số tính ra -> formula bằng các số khác
+      (vd "600000*0.20"), tool sẽ tự kiểm tra; số giả định -> label bắt đầu "Giả định:" và verified=false.
+      Thiếu dữ liệu -> nói rõ "cần bổ sung", verified=false. Không bịa lãi suất/giá nhà.
+    - Hình: "chart" (diagram.type cost_breakdown / bar_chart / rent_vs_buy) khi trình bày số; "character" khi kể tình
+      huống (image_prompt_en chỉ tả bối cảnh trống: nhà, ngân hàng, phòng khách...).
+    - Không đưa lời khuyên đầu tư cá nhân; nhắc người xem tham khảo chuyên gia tài chính.
+media:
+  mode: "ai_only"
+  ai_style_suffix: ""
+render:
+  look: "bright"
+  card_style: "bold_light"
+  brand: "default"
+  burn_subtitles: true
+  auto_music_style: "light"
+edit:
+  fog: false
+  flicker: false
+  age_photos: false
+  zoom: 0.06
+  transition: "cut"
+  motions: ["push_in", "pull_out", "pan_lr", "hold"]
+  print_rate: 0
+  circle_rate: 0
+  torch_rate: 0
+  flash_rate: 0
+sfx:
+  type: 0.0
+  riser: 0.1
+voice:
+  vieneu_voice: "Thanh Bình"
+project:
+  country: "Hoa Kỳ"
+  currency: "USD"
+  data_date: ""

@@ -1,0 +1,200 @@
+{
+ "title": "Mua nhà 600.000 USD cần chuẩn bị những khoản nào?",
+ "title_line1": "NHÀ Ở & TÀI CHÍNH",
+ "title_line2": "NHÀ 600.000 USD CẦN BAO NHIÊU TIỀN?",
+ "thumbnail_text": "MUA NHÀ 600K CẦN BAO NHIÊU?",
+ "youtube_titles": [],
+ "description": "",
+ "tags": [],
+ "sources_used": [],
+ "chapters": [
+  {
+   "title": "Tiền mặt cần có",
+   "scenes": [
+    {
+     "narration": "Một gia đình muốn mua căn nhà sáu trăm nghìn đô ở Mỹ. Họ cần chuẩn bị bao nhiêu tiền mặt?",
+     "purpose": "đặt câu hỏi",
+     "on_screen_text": "",
+     "visual_type": "character",
+     "action": "",
+     "camera": "push_in",
+     "sound": "city",
+     "entity": {
+      "name": "",
+      "role": "",
+      "search_query_en": ""
+     },
+     "character": {
+      "expression": "thinking",
+      "pose": "think",
+      "position": "left",
+      "thought": "Cần bao nhiêu tiền mặt?",
+      "outside": "",
+      "inside": "",
+      "keywords": [
+       "600.000 USD"
+      ]
+     },
+     "figures": [],
+     "diagram": {
+      "type": "none",
+      "subject": "",
+      "size_m": 0,
+      "depth_m": 0
+     },
+     "sources": [],
+     "search_queries_en": [],
+     "image_prompt_en": "a bright suburban street with a two-story family house and a for sale sign, sunny, no people"
+    },
+    {
+     "narration": "Giả định họ trả trước hai mươi phần trăm, tức một trăm hai mươi nghìn đô. Phí đóng hồ sơ ước khoảng ba phần trăm, tức mười tám nghìn đô. Và nên giữ quỹ dự phòng sáu tháng.",
+     "purpose": "giải thích từng khoản",
+     "on_screen_text": "Tiền mặt cần chuẩn bị",
+     "visual_type": "chart",
+     "action": "",
+     "camera": "hold",
+     "sound": "none",
+     "entity": {
+      "name": "",
+      "role": "",
+      "search_query_en": ""
+     },
+     "character": {
+      "expression": "",
+      "pose": "stand",
+      "position": "left",
+      "thought": "",
+      "outside": "",
+      "inside": "",
+      "keywords": []
+     },
+     "figures": [
+      {
+       "label": "Giá nhà",
+       "value": 600000,
+       "unit": "USD",
+       "formula": "",
+       "source": "Giả định của video",
+       "verified": false
+      },
+      {
+       "label": "Trả trước 20%",
+       "value": 120000,
+       "unit": "USD",
+       "formula": "600000*0.20",
+       "source": "",
+       "verified": false
+      },
+      {
+       "label": "Phí đóng hồ sơ 3%",
+       "value": 18000,
+       "unit": "USD",
+       "formula": "600000*0.03",
+       "source": "",
+       "verified": false
+      },
+      {
+       "label": "Quỹ dự phòng 6 tháng",
+       "value": 30000,
+       "unit": "USD",
+       "formula": "5000*6",
+       "source": "",
+       "verified": false
+      },
+      {
+       "label": "Tổng tiền mặt",
+       "value": 168000,
+       "unit": "USD",
+       "formula": "120000+18000+30000",
+       "source": "",
+       "verified": false
+      }
+     ],
+     "diagram": {
+      "type": "cost_breakdown",
+      "subject": "Tiền mặt cần chuẩn bị",
+      "size_m": 0,
+      "depth_m": 0
+     },
+     "sources": [],
+     "search_queries_en": [],
+     "image_prompt_en": ""
+    },
+    {
+     "narration": "Còn mỗi tháng, thuê nhà và mua nhà khác nhau ra sao? Hãy đặt hai phương án cạnh nhau.",
+     "purpose": "so sánh phương án",
+     "on_screen_text": "Thuê hay mua? (mỗi tháng)",
+     "visual_type": "chart",
+     "action": "",
+     "camera": "hold",
+     "sound": "none",
+     "entity": {
+      "name": "",
+      "role": "",
+      "search_query_en": ""
+     },
+     "character": {
+      "expression": "",
+      "pose": "stand",
+      "position": "left",
+      "thought": "",
+      "outside": "",
+      "inside": "",
+      "keywords": []
+     },
+     "figures": [
+      {
+       "label": "Thuê: tiền thuê",
+       "value": 3200,
+       "unit": "USD",
+       "formula": "",
+       "source": "",
+       "verified": false
+      },
+      {
+       "label": "Thuê: bảo hiểm người thuê",
+       "value": 20,
+       "unit": "USD",
+       "formula": "",
+       "source": "",
+       "verified": false
+      },
+      {
+       "label": "Mua: trả góp gốc + lãi",
+       "value": 3190,
+       "unit": "USD",
+       "formula": "",
+       "source": "",
+       "verified": false
+      },
+      {
+       "label": "Mua: thuế nhà đất",
+       "value": 600,
+       "unit": "USD",
+       "formula": "600000*0.012/12",
+       "source": "",
+       "verified": false
+      },
+      {
+       "label": "Mua: bảo hiểm nhà",
+       "value": 150,
+       "unit": "USD",
+       "formula": "",
+       "source": "",
+       "verified": false
+      }
+     ],
+     "diagram": {
+      "type": "rent_vs_buy",
+      "subject": "",
+      "size_m": 0,
+      "depth_m": 0
+     },
+     "sources": [],
+     "search_queries_en": [],
+     "image_prompt_en": ""
+    }
+   ]
+  }
+ ]
+}

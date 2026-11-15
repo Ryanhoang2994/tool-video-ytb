@@ -1,0 +1,51 @@
+# Khám phá đại dương & sinh vật (hướng nội dung kiểu Depth Theory)
+description: "Khám phá đại dương và sinh vật - ảnh/video thật đúng loài, sơ đồ kích thước & độ sâu, thợ lặn 2D làm tham chiếu"
+channel:
+  target_minutes: 10
+script:
+  chapters: 6
+  style: "Bình tĩnh, rõ ràng, cảm giác khám phá; tăng nhịp ở đoạn chạm trán."
+  visual_types: ["species", "video_broll", "diagram", "character", "atmosphere", "map"]
+  system: |
+    Bạn là biên kịch kênh YouTube khám phá đại dương và sinh vật biển (không lộ mặt).
+    CẤU TRÚC MỖI VIDEO: (1) mở bằng tình huống khiến người xem tưởng tượng mình đang có mặt dưới nước
+    -> (2) giới thiệu sinh vật -> (3) giải thích các đặc điểm đáng chú ý (kích thước, giác quan, cách săn mồi, môi trường
+    sống, độ sâu) -> (4) mô tả cuộc chạm trán với con người hoặc câu hỏi giả định CÓ CĂN CỨ -> (5) lời giải và ý nghĩa
+    sinh thái. Có thể mở rộng sang sinh vật tiền sử.
+    - Mọi số liệu (kích thước, độ sâu, tốc độ, tuổi thọ) phải lấy từ tư liệu, ghi vào figures với source; số chưa xác
+      minh để verified=false. Nói rõ "theo các nhà khoa học..." / "đây là giả thuyết...".
+    - Hình: "species" cho ảnh/video THẬT của đúng loài (search_queries_en ghi tên khoa học + tên tiếng Anh);
+      "diagram" size_compare (so với thợ lặn cao 1,8 m) hoặc depth_chart khi nói về kích thước/độ sâu;
+      "character" = thợ lặn 2D làm điểm tham chiếu trong tình huống giả định; "video_broll" cho cảnh dưới nước.
+    - Cảnh toàn khi thể hiện quy mô (camera pull_out), cảnh cận khi giải thích bộ phận (push_in), sơ đồ khi nói cơ chế.
+    - sound: "underwater" cho hầu hết cảnh, "heartbeat"/"riser" ở đoạn căng thẳng.
+    - Không phóng đại nguy hiểm, không bịa vụ tấn công. Lời dẫn viết để ĐỌC THÀNH TIẾNG, câu rõ ràng.
+media:
+  mode: "mixed"
+  image_sources: ["wiki_article", "wikimedia", "smithsonian", "openverse", "loc", "pexels", "pixabay", "unsplash"]
+  video_sources: ["wikimedia_video", "pexels_video", "pixabay_video"]
+  video_ratio: 0.45
+  ai_for_visual_types: ["atmosphere"]
+  ai_style_suffix: >
+    , realistic underwater photography, deep ocean blue, light rays from the surface, particles in water,
+    cinematic, no text, no watermark
+render:
+  look: "deep_blue"
+  card_style: "bold_dark"
+  brand: "ocean"
+  burn_subtitles: false
+edit:
+  fog: false
+  flicker: false
+  age_photos: false
+  zoom: 0.12
+  transition: "cut"
+  motions: ["push_in", "pull_out", "pan_lr", "pan_rl", "float", "hold", "snap_zoom"]
+  print_rate: 0
+  circle_rate: 0.3
+  torch_rate: 0
+  flash_rate: 0
+sfx:
+  default_ambience: "underwater"
+voice:
+  vieneu_voice: "Thiền Tâm Đức"

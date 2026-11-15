@@ -1,0 +1,30 @@
+# Khoá API / bí mật - KHÔNG BAO GIỜ đẩy lên
+.env
+*.key
+
+# Dữ liệu từng video (ảnh, giọng, video dựng) - nặng, tạo lại được
+projects/
+library/
+demo_videos/
+analysis/preview/
+voices/*
+!voices/.gitkeep
+
+# File tool tự sinh
+assets/_auto_music*.wav
+assets/_rain_*.png
+assets/fog.png
+assets/sfx/_gen/
+assets/music/*
+!assets/music/.gitkeep
+!assets/music/README.txt
+
+# Python
+__pycache__/
+*.pyc
+.venv*/
+venv/
+
+# Hệ điều hành
+.DS_Store
+Thumbs.db

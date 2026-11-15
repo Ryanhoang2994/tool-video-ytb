@@ -1,0 +1,3 @@
+title.ttf / title_regular.ttf = Roboto Condensed (Google), Apache License 2.0
+https://www.apache.org/licenses/LICENSE-2.0
+hand.ttf = Patrick Hand (Google Fonts, qua npm @expo-google-fonts/patrick-hand), SIL Open Font License 1.1

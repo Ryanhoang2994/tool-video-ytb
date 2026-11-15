@@ -1,0 +1,116 @@
+{
+ "title": "Tầng không có trên bảng điều khiển",
+ "title_line1": "TRUYỆN KINH DỊ",
+ "title_line2": "TẦNG KHÔNG TỒN TẠI",
+ "thumbnail_text": "ĐỪNG BẤM TẦNG NÀY",
+ "youtube_titles": [],
+ "description": "",
+ "tags": [],
+ "sources_used": [],
+ "chapters": [
+  {
+   "title": "Thang máy lúc nửa đêm",
+   "scenes": [
+    {
+     "narration": "Đây là một câu chuyện hư cấu. Mỗi đêm, đúng mười hai giờ, chiếc thang máy của toà nhà lại dừng ở một tầng không có trên bảng điều khiển.",
+     "purpose": "chi tiết bất thường",
+     "on_screen_text": "",
+     "visual_type": "atmosphere",
+     "action": "",
+     "camera": "hold",
+     "sound": "night",
+     "entity": {
+      "name": "",
+      "role": "",
+      "search_query_en": ""
+     },
+     "character": {
+      "expression": "",
+      "pose": "stand",
+      "position": "left",
+      "thought": "",
+      "outside": "",
+      "inside": "",
+      "keywords": []
+     },
+     "figures": [],
+     "diagram": {
+      "type": "none",
+      "subject": "",
+      "size_m": 0,
+      "depth_m": 0
+     },
+     "sources": [],
+     "search_queries_en": [],
+     "image_prompt_en": "an empty old apartment elevator interior at night, flickering light, a panel of buttons with one strange unlabeled red glowing button"
+    },
+    {
+     "narration": "Minh là bảo vệ ca đêm. Anh đã xem lại camera ba lần. Lần nào cửa thang máy cũng mở ra, và không có ai bước vào.",
+     "purpose": "giới thiệu nhân vật",
+     "on_screen_text": "",
+     "visual_type": "character",
+     "action": "",
+     "camera": "push_in",
+     "sound": "footsteps",
+     "entity": {
+      "name": "",
+      "role": "",
+      "search_query_en": ""
+     },
+     "character": {
+      "expression": "worried",
+      "pose": "hold",
+      "position": "left",
+      "thought": "Lại là tầng đó...",
+      "outside": "",
+      "inside": "",
+      "keywords": []
+     },
+     "figures": [],
+     "diagram": {
+      "type": "none",
+      "subject": "",
+      "size_m": 0,
+      "depth_m": 0
+     },
+     "sources": [],
+     "search_queries_en": [],
+     "image_prompt_en": "a dark security room with old CRT monitors showing a hallway, empty chair, no people"
+    },
+    {
+     "narration": "Đêm thứ tư, Minh quyết định tự mình bước vào thang máy.",
+     "purpose": "căng thẳng tăng dần",
+     "on_screen_text": "",
+     "visual_type": "atmosphere",
+     "action": "",
+     "camera": "push_in",
+     "sound": "door",
+     "entity": {
+      "name": "",
+      "role": "",
+      "search_query_en": ""
+     },
+     "character": {
+      "expression": "",
+      "pose": "stand",
+      "position": "left",
+      "thought": "",
+      "outside": "",
+      "inside": "",
+      "keywords": []
+     },
+     "figures": [],
+     "diagram": {
+      "type": "none",
+      "subject": "",
+      "size_m": 0,
+      "depth_m": 0
+     },
+     "sources": [],
+     "search_queries_en": [],
+     "image_prompt_en": "a long dark corridor leading to an open elevator with dim red light inside, empty, eerie"
+    }
+   ]
+  }
+ ]
+}

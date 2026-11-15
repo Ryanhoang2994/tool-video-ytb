@@ -1,0 +1,53 @@
+# Kể chuyện bí ẩn / kinh dị
+description: "Bí ẩn/kinh dị (hư cấu, truyền thuyết, sự kiện có thật) - tông tối đỏ, nhân vật 2D, nhịp chậm, âm thanh môi trường"
+channel:
+  target_minutes: 10
+script:
+  chapters: 6
+  style: "Kể chậm ở đoạn chuẩn bị, tăng nhịp ở cao trào; nhiều khoảng lặng; rùng rợn nhưng không máu me."
+  visual_types: ["atmosphere", "character", "quote", "evidence", "location"]
+  system: |
+    Bạn là biên kịch kênh YouTube kể chuyện bí ẩn / kinh dị.
+    LOẠI TRUYỆN do THÔNG TIN VIDEO quy định (story_type):
+      - fiction: truyện hư cấu TỰ VIẾT. Ngay scene đầu phải có câu "Đây là một câu chuyện hư cấu." (sẽ hiện thẻ cảnh báo).
+      - legend: truyền thuyết đô thị -> nói rõ đây là truyền thuyết/lời kể, không khẳng định là thật.
+      - real_event: sự kiện có thật -> chỉ dùng tư liệu, phân biệt rõ DỮ KIỆN / LỜI KỂ / SUY ĐOÁN.
+    CẤU TRÚC: (1) một chi tiết bất thường -> (2) giới thiệu nhân vật và bối cảnh -> (3) xuất hiện thêm dấu hiệu ->
+    (4) căng thẳng tăng dần -> (5) cao trào -> (6) lời giải hoặc kết thúc mở CÓ CHỦ ĐÍCH.
+    - Mọi manh mối gieo ra phải liên kết với diễn biến về sau (ghi trong purpose: "gieo manh mối X" / "trả manh mối X").
+    - Không dùng truyện của người khác khi chưa được phép. Không máu me, không nhắm vào người thật.
+    - camera: "hold" ở đoạn cần quan sát, "push_in" chậm khi tiết lộ; sound: footsteps, door, heartbeat, wind, night,
+      silence (khoảng lặng trước cú hù), riser trước cao trào.
+    - "character" = nhân vật 2D đơn giản (image_prompt_en tả không gian vắng, tối, bóng đổ, chi tiết bất thường).
+media:
+  mode: "ai_only"
+  shot_seconds: 9
+  ai_style_suffix: >
+    , dark atmospheric 2D illustration, high contrast, deep shadows, black and dark grey with blood red accents,
+    empty eerie space, unsettling small detail, cinematic composition, no text, no watermark
+render:
+  look: "noir_red"
+  card_style: "bold_dark"
+  brand: "default"
+  burn_subtitles: true
+  subtitle_style: "story"
+  chapter_style: "overlay"  # tên chương hiện đè lên cảnh, lời kể không dừng (overlay | card | none)
+edit:
+  fog: true
+  fog_opacity: 0.12
+  flicker: false
+  age_photos: false
+  zoom: 0.09
+  transition: "cut"
+  motions: ["push_in", "hold", "pan_lr", "pan_rl", "shake", "snap_zoom"]
+  print_rate: 0
+  circle_rate: 0.3
+  torch_rate: 0.3
+  flash_rate: 0.1
+  hook_pace: 1.0
+sfx:
+  default_ambience: "night"
+voice:
+  vieneu_voice: "Thiền Tâm Đức"
+project:
+  story_type: "fiction"

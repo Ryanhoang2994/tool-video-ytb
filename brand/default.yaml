@@ -1,0 +1,22 @@
+# BRAND KIT của kênh - dùng chung cho mọi video (copy file này thành brand/<tên_kênh>.yaml rồi đặt
+# render.brand: "<tên_kênh>" trong config.yaml hoặc preset).
+name: "Kênh của tôi"
+mascot:                       # nhân vật linh vật vẽ bằng code -> giống hệt nhau ở mọi cảnh
+  head: [252, 252, 250]       # màu đầu (RGB)
+  outline: [20, 20, 20]       # màu nét viền
+  shirt: [138, 181, 90]       # áo (xanh lá)
+  pants: [120, 92, 66]        # quần
+  shoes: [40, 40, 40]
+  accessory: ""               # "" | glasses | cap | scarf
+  accessory_color: [200, 40, 40]
+  line: 10                    # độ dày nét
+palette:
+  accent: [255, 221, 0]       # màu nhấn (hộp chữ, nhãn từ khoá)
+  dark: [15, 15, 15]
+  light: [245, 240, 228]
+font: "assets/fonts/title.ttf"
+voice:
+  narrator: "Thanh Bình"      # giọng VieNeu dẫn chuyện
+background_style: >
+  , detailed 2D cartoon background illustration, flat colors, clean dark outlines, soft shading,
+  warm cozy palette, empty scene with no people and no characters, 16:9, no text, no watermark

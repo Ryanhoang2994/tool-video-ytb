@@ -1,0 +1,156 @@
+# ============================================================
+#  COLD CASE STUDIO - cấu hình chung
+# ============================================================
+
+channel:
+  name: "Hồ Sơ Lạnh"         # tên kênh (dùng trong intro/outro, thumbnail)
+  language: "vi"                 # en | vi  (ngôn ngữ lời dẫn)
+  target_minutes: 40             # độ dài video mong muốn
+  words_per_minute: 190          # tốc độ đọc ước tính (en ~140-150, vi ~150-165)
+
+# ---------- Viết kịch bản ----------
+script:
+  model: "claude-opus-5-5"
+  effort: "high"                 # low | medium | high | xhigh | max
+  chapters: 8                    # số chương (mỗi chương ~5 phút)
+  style: >
+    Calm, slow, deep-voiced investigative documentary narration (cold case style).
+    Open with a gripping hook in the first 30 seconds. Tell the story chronologically with a
+    cliffhanger at the end of each chapter. Respect the victims, no gratuitous gore, never accuse
+    anyone who was not convicted. Clearly separate documented FACTS from THEORIES and rumors.
+    Conversational American English, vivid period detail (sounds, weather, newspapers of the era).
+
+# ---------- Tìm tư liệu (research) ----------
+research:
+  wikipedia_langs: ["en"]         # thêm "vi" nếu làm vụ án Việt Nam
+  max_newspaper_hits: 25          # báo cũ Chronicling America / Internet Archive
+  max_chars_per_source: 12000
+
+# ---------- Hình ảnh / video ----------
+media:
+  mode: "mixed"                   # mixed = ảnh/video tư liệu + AI bù | ai_only = toàn bộ ảnh AI (kiểu kênh kể chuyện)
+  # Thứ tự ưu tiên nguồn. Bỏ bớt nguồn bạn không muốn dùng.
+  # wiki_article (ảnh trong bài Wikipedia vụ án) | wikimedia | loc | loc_news (trang báo cũ) | openverse | europeana
+  # smithsonian | flickr | archive_img | pexels | pixabay | unsplash   (xem core/sources.py)
+  image_sources: ["wiki_article", "wikimedia", "loc", "loc_news", "openverse", "europeana", "smithsonian",
+                  "flickr", "archive_img", "pexels", "pixabay", "unsplash"]
+  unique_ratio: 0.7               # 70% shot là ảnh khác nhau, 30% là cận chi tiết của ảnh đã có
+  clip_rank: "auto"               # chấm điểm ảnh bằng AI CLIP nếu đã pip install sentence-transformers
+  video_sources: ["wikimedia_video", "pexels_video", "pixabay_video", "archive_video"]
+  shot_seconds: 7                 # mỗi cảnh (shot) dài bao nhiêu giây trước khi đổi hình
+  video_ratio: 0.35               # ~35% shot dùng video, còn lại là ảnh (Ken Burns)
+  min_width: 900                  # bỏ ảnh quá nhỏ
+  # Tạo ảnh bằng AI khi không tìm được ảnh phù hợp
+  ai_images: true
+  ai_for_visual_types: ["atmosphere"]   # loại cảnh luôn được thêm 1 ảnh AI (vd thêm "location", "video_broll")
+  image_min_relevance: 0.34       # ảnh phải khớp >=34% từ khoá chính của cảnh, không thì dùng ảnh AI
+  video_min_relevance: 0.34       # video phải khớp >=34% từ khoá mới được tải (tránh video lạc đề)
+  ai_backend: "pollinations"      # pollinations (free; có token thì đẹp hơn) | openai (gpt-image-1, trả phí) | a1111 (SD/Forge trên máy) | none
+  ai_model: "flux"                # model của pollinations
+  ai_quality: "medium"            # openai: low | medium | high
+  a1111_url: "http://127.0.0.1:7860"
+  ai_style_suffix: >
+    , 1970s archival documentary photograph, film grain, muted desaturated colors,
+    moody low light, cinematic, realistic, no text, no watermark
+
+# ---------- Giọng đọc ----------
+voice:
+  backend: "vieneu"               # vieneu (tiếng Việt, miễn phí, rất tự nhiên) | google (Chirp 3 HD) | elevenlabs
+                                  # | edge | kokoro | api (VoiceStudio) | omnivoice | xtts | piper | command
+  # DÀN GIỌNG: câu trích dẫn của nhân vật (cảnh "quote") đọc bằng giọng riêng, ngay sau lời người dẫn chuyện.
+  # Giá trị: tên giọng của engine (vieneu: "Thái Sơn"; edge: "vi-VN-HoaiMyNeural"; google: "vi-VN-Chirp3-HD-Kore";
+  # elevenlabs: voice_id) HOẶC đường dẫn file mẫu 3-8 giây để clone (vieneu), vd "voices/nhan_vat_A.wav"
+  cast:
+    "DAN COOPER": "Thái Sơn"
+  quote_gap: 0.45
+  polish: true                    # làm đẹp giọng kiểu phòng thu (EQ ấm, giảm xì, nén, chút không gian)
+  # VieNeu-TTS (pip install vieneu) - nghe thử: python studio.py voices --vieneu
+  vieneu_voice: "Thiền Tâm Đức"   # giọng kể chuyện. Khác: Thanh Bình, Thái Sơn (giọng Nam), Đức Trí, Ngọc Linh (nữ)...
+  vieneu_ref_wav: ""              # clone giọng của bạn: đường dẫn file mẫu 3-8 giây (vd voices/my_voice.wav)
+  vieneu_precision: "int8"        # int8 = nhanh trên CPU | để trống = fp32 chất lượng cao nhất (chậm hơn)
+  # Google Cloud TTS (Chirp 3 HD) - cần GOOGLE_TTS_API_KEY hoặc chạy trên VPS Google Cloud
+  google_voice: "vi-VN-Chirp3-HD-Charon"   # nam trầm. Khác: ...-Fenrir, ...-Orus, ...-Iapetus (nam); ...-Kore, ...-Aoede (nữ)
+  google_rate: 0.95
+  # ElevenLabs - cần ELEVENLABS_API_KEY
+  elevenlabs_voice_id: ""
+  elevenlabs_model: "eleven_v3"   # eleven_v3 (tự nhiên nhất) | eleven_flash_v2_5 (rẻ hơn 50%)
+  elevenlabs_stability: 0.5
+  elevenlabs_style: 0.15
+  edge_voice: "vi-VN-NamMinhNeural"  # giọng nam trầm. Khác: en-GB-RyanNeural, en-US-AndrewNeural, en-US-GuyNeural, en-US-AvaNeural (nữ)
+  edge_rate: "-4%"                # chậm lại một chút cho không khí trầm
+  edge_pitch: "-4Hz"
+  piper_model: "voices/en_US-ryan-high.onnx"   # vi: voices/vi_VN-vais1000-medium.onnx
+  piper_length_scale: 1.1         # >1 = đọc chậm hơn
+  # Kokoro (github.com/hexgrad/kokoro) - TTS tiếng Anh offline rất tự nhiên, chạy CPU được
+  kokoro_voice: "am_michael"     # am_michael, am_fenrir, bm_george, bm_lewis (Anh), af_heart (nữ)...
+  kokoro_speed: 0.92
+  # XTTS-v2 (clone giọng từ 1 file mẫu 6-15s, cần GPU). EN: voices/XTTS-v2 | VI: voices/viXTTS
+  xtts_model_dir: "voices/XTTS-v2"
+  xtts_ref_wav: "voices/my_voice.wav"
+  # VoiceStudio (github.com/debpalash/VoiceStudio) - mở app, clone giọng, lưu "voice profile"
+  api_url: "http://127.0.0.1:3900/v1"
+  api_voice: "Narrator"           # tên (hoặc id) voice profile trong VoiceStudio
+  api_model: "tts-1"              # tts-1 = engine đang bật trong VoiceStudio
+  api_speed: 0.95
+  # OmniVoice chạy thẳng bằng Python (dùng chung file mẫu xtts_ref_wav bên dưới nếu có)
+  omnivoice_instruct: "male, low pitch, american accent"   # khi không có file giọng mẫu
+  omnivoice_speed: 0.95
+  ref_text: ""                    # lời thoại của file giọng mẫu (để trống = tự nhận dạng)
+  # Backend "command": chạy bất kỳ tool TTS nào (F5-TTS, GPT-SoVITS...). Placeholder: {text_file} {out_wav}
+  command: 'f5-tts_infer-cli --gen_file "{text_file}" --output_file "{out_wav}"'
+  # test nhanh không cần mạng (giọng máy): espeak-ng -v en-us+m3 -s 112 -p 35 -f "{text_file}" -w "{out_wav}"
+  pause_after_scene: 0.6          # giây nghỉ giữa các đoạn
+
+# ---------- Phong cách dựng (kể chuyện bằng ảnh) ----------
+# Mẹo: tải 1 video đối thủ về máy rồi chạy `python studio.py analyze video.mp4` để đo nhịp cắt, độ zoom, màu
+# -> tool gợi ý các con số dưới đây cho giống nhịp kênh đó.
+edit:
+  zoom: 0.14                      # độ zoom tối đa mỗi shot (0.08 nhẹ - 0.25 mạnh)
+  transition: "cut"               # chuyển cảnh trong 1 đoạn: cut (cắt theo nhịp câu) | fade | dissolve | black
+  flash_rate: 0.2                # tỉ lệ chớp trắng (đèn flash) khi vào ảnh vật chứng / mẩu báo
+  print_rate: 0.35                # tỉ lệ ảnh dọc/chân dung được đóng khung ảnh in / polaroid trên bàn
+  snap_rate: 0.2                  # tỉ lệ shot cận chi tiết dùng zoom nhanh (snap zoom)
+  shake_rate: 0.15                # tỉ lệ rung máy nhẹ ở cảnh không khí
+  detail_shots: true              # dùng 1 ảnh lớn cho nhiều shot: toàn cảnh -> cận chi tiết
+  age_photos: true                # làm ảnh ngả màu cũ (khi look = vintage)
+  flicker: false                  # nhấp nháy sáng kiểu máy chiếu phim (hợp look vintage)
+  fog: true                       # khói/sương trôi ngang (look dark)
+  fog_opacity: 0.18
+  fog_speed: 28
+  motions: ["push_in", "pull_out", "pan_lr", "pan_rl", "tilt_down", "tilt_up", "punch", "snap_zoom", "float", "shake",
+            "slam", "torch"]          # slam = báo/poster đập vào màn hình, torch = đèn pin soi trong tối
+  circle_rate: 0.5                # tỉ lệ khoanh đỏ chi tiết trên ảnh vật chứng
+  torch_rate: 0.4                 # tỉ lệ dùng đèn pin soi cho tài liệu / vật chứng (look dark)
+  hook_pace: 0.6                  # 30 giây đầu: độ dài shot x0.6 (cắt nhanh để giữ người xem)
+
+# ---------- Dựng video ----------
+render:
+  width: 1920
+  height: 1080
+  fps: 30
+  look: "dark"                    # dark (phim tài liệu tội phạm, tối + khói) | vintage | noir | clean
+  burn_subtitles: false           # true = in phụ đề cứng vào video
+  music_volume: 0.10              # nhạc nền (đặt file .mp3 vào assets/music/)
+  font: ""                        # để trống = tự tìm font hỗ trợ tiếng Việt
+  crf: 20
+  encoder: "auto"                 # auto (dùng card NVIDIA NVENC nếu có, nhanh hơn nhiều) | nvenc | libx264
+  auto_music: true                # chưa có nhạc trong assets/music/ thì tự tạo nhạc nền u tối
+  preset: "faster"           # ultrafast..slow: chậm hơn = file nhỏ/đẹp hơn
+
+# ---------- Hiệu ứng âm thanh ----------
+# Tự gắn theo hình: boom ở thẻ chương, whoosh khi thẻ tên trượt vào, màn trập máy ảnh khi flash, tiếng gõ máy chữ.
+# Thay bằng âm thanh của bạn: assets/sfx/hit.wav, whoosh.wav, flash.wav, type.wav (WAV 16-bit)
+sfx:
+  enabled: true
+  volume: 1.0
+  hit: 0.55
+  whoosh: 0.35
+  flash: 0.45
+  type: 0.25
+
+# ---------- CapCut ----------
+capcut:
+  # Thư mục draft của CapCut trên Windows (đổi <TEN_USER>):
+  drafts_dir: "C:/Users/<TEN_USER>/AppData/Local/CapCut/User Data/Projects/com.lveditor.draft"
+  zoom_multiplier: 1.0            # nhân độ zoom (edit.zoom) khi xuất sang CapCut
+  filter: ""                      # tên FilterType của pycapcut (vd "Gritty_Noir"), để trống nếu không dùng
