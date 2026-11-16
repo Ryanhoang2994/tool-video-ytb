@@ -139,7 +139,7 @@ def http_get(url: str, *, params=None, headers=None, timeout=30, retries=4, stre
     last = None
     host = _host(url)
     hits = _host_429.get(host, [])
-    if len([t for t in hits if time.time() - t < 120]) >= 6:  # host đang chặn tốc độ -> tạm bỏ qua 2 phút
+    if "pollinations" not in host and len([t for t in hits if time.time() - t < 120]) >= 6:  # chặn tốc độ -> bỏ qua 2 phút
         raise requests.HTTPError(f"429 (tạm bỏ qua {host})")
     allto = _host_timeout.get(host, [])
     if host in _host_dead:

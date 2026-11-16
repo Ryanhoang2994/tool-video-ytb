@@ -474,12 +474,15 @@ def collect_media(project: Project, cfg: dict, only: set[str] | None = None, can
         proper = [w.lower() for w in re.findall(r"\b[A-Z][a-zA-Z]{2,}", prim) if w not in common]
 
         def relevant(r: dict) -> bool:
-            text = r["title"] + " " + " ".join(r.get("queries", []))
-            if s["visual_type"] in ("person", "board") or not prim:
+            # chỉ so với TIÊU ĐỀ ảnh (trước đây cộng cả từ khoá đã dùng để tìm -> ảnh nào cũng "khớp")
+            title = r["title"]
+            if s["visual_type"] == "board" or not prim:
                 return True
-            if proper and not all(pn in r["title"].lower() for pn in proper):
-                return False  # tên riêng (địa danh, tên tàu...) phải có trong tiêu đề ảnh
-            return keyword_score(prim, text) >= min_img or keyword_score(primary, r["title"]) >= 0.67
+            if proper and not all(pn in title.lower() for pn in proper):
+                return False  # tên riêng (người, địa danh, tên tàu...) phải có trong tiêu đề ảnh
+            if s["visual_type"] == "person" and not proper:
+                return True  # chân dung minh hoạ chung (không phải người cụ thể)
+            return keyword_score(prim, title) >= min_img or keyword_score(primary, title) >= 0.67
 
         ranked = [r for r in ranked if relevant(r) and era_ok_strict(f"{primary} {era}", r["title"])]
         for r in ranked:
