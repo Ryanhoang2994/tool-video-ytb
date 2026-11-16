@@ -136,9 +136,10 @@ def http_get(url: str, *, params=None, headers=None, timeout=30, retries=4, stre
     hits = _host_429.get(host, [])
     if len([t for t in hits if time.time() - t < 120]) >= 6:  # host đang chặn tốc độ -> tạm bỏ qua 2 phút
         raise requests.HTTPError(f"429 (tạm bỏ qua {host})")
-    tos = [t for t in _host_timeout.get(host, []) if time.time() - t < 600]
-    if len(tos) >= 2:  # host không trả lời 2 lần trong 10 phút -> bỏ qua 10 phút thay vì chờ hết giờ mãi
-        raise requests.exceptions.ConnectTimeout(f"{host} không phản hồi (tạm bỏ qua 10 phút)")
+    allto = _host_timeout.get(host, [])
+    tos = [t for t in allto if time.time() - t < 600]
+    if len(tos) >= 2 or len(allto) >= 5:  # không trả lời 2 lần/10 phút -> nghỉ 10 phút; lặp lại nhiều lần -> bỏ hẳn
+        raise requests.exceptions.ConnectTimeout(f"{host} không phản hồi (tạm bỏ qua)")
     for i in range(retries):
         try:
             _throttle(url)

@@ -495,7 +495,7 @@ def collect_media(project: Project, cfg: dict, only: set[str] | None = None, can
         ai_on = mc.get("ai_images") and mc.get("ai_backend") != "none" and s.get("image_prompt_en")
         want_ai = 0
         if ai_on:
-            want_ai = max(0, min(uniq_target, need) - len(picked))
+            want_ai = max(0, min(uniq_target, need, int(mc.get("ai_max_per_scene", 2))) - len(picked))
             if s["visual_type"] in mc.get("ai_for_visual_types", ["atmosphere"]) and want_ai == 0:
                 want_ai = 1
         for k in range(want_ai):
