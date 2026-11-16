@@ -263,6 +263,10 @@ def collect_ai_only(project: Project, cfg: dict, only: set[str] | None = None) -
     return plan
 
 
+DOC_LIST = re.compile(r"enumeration district|census|sheet no|directory|catalog(ue)?|year ?book|roster|register of",
+                      re.I)
+
+
 def find_entity_image(lib: Library, ent: dict, srcs: list[str]) -> dict | None:
     """Ảnh chân dung của 1 nhân vật thật. CHỈ nhận ảnh có tiêu đề chứa đủ họ tên người đó,
     để không bao giờ gắn nhầm mặt người khác vào tên nhân vật (rất nguy hiểm với phim tội phạm)."""
@@ -492,6 +496,8 @@ def collect_media(project: Project, cfg: dict, only: set[str] | None = None, can
                 return True
             if proper and not all(pn in title.lower() for pn in proper):
                 return False  # tên riêng (người, địa danh, tên tàu...) phải có trong tiêu đề ảnh
+            if s["visual_type"] in ("person", "quote") and DOC_LIST.search(title):
+                return False  # trang điều tra dân số / danh bạ có trùng tên -> không phải ảnh của người này
             if keyword_score(prim, title) >= min_img or keyword_score(primary, title) >= 0.67:
                 return True
             return not proper and any(keyword_score(q, title) >= max(min_img, 0.4) for q in alt_qs)
