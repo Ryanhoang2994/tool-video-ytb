@@ -96,6 +96,21 @@ Khi dựng lại, tool chỉ render những đoạn đã thay đổi (đã test:
 phát âm (số/viết tắt/ký hiệu), phụ đề, nhất quán nhân vật, **phép tính** (tính lại mọi `formula`), **số chưa xác minh /
 thiếu nguồn**, khớp hình–lời, âm lượng (LUFS, đỉnh). Mục không tự kiểm được ghi "⬜ chưa kiểm tra được".
 
+## Giao diện (không cần gõ lệnh)
+
+Windows: bấm đúp **`start_ui.bat`** (Linux/macOS: `./start_ui.sh`) – trình duyệt tự mở **http://127.0.0.1:7860**.
+Hoặc gõ: `python studio.py ui`.
+
+- **Dự án**: danh sách video, ảnh thu nhỏ, thời lượng, các bước đã xong.
+- **Tạo video mới**: chọn phong cách (preset), nhập chủ đề, thời lượng, người xem, tư liệu/kịch bản có sẵn → bấm "Tạo video".
+- **Trang dự án**: bấm chạy từng bước (Tư liệu → Kịch bản → Giọng → Hình → Dựng → Kiểm tra → CapCut), xem nhật ký trực tiếp,
+  xem video, báo cáo kiểm tra, tiêu đề + mô tả YouTube, tải phụ đề/thumbnail.
+- **Storyboard & sửa cảnh**: sửa lời đọc, hiệu ứng (rùng mình, hành động…), ánh sáng, nhạc, cụm từ nhấn mạnh, biểu cảm nhân vật…
+  → "Lưu & dựng lại" chỉ làm lại cảnh đó.
+- **API key**: điền key ngay trên giao diện (lưu vào `.env` trên máy bạn).
+
+Giao diện chỉ mở trên máy bạn (127.0.0.1). Muốn máy khác trong cùng mạng LAN mở được: `python studio.py ui --host 0.0.0.0`.
+
 ## 1a. Cài trên máy mới từ GitHub
 
 Cần: Python 3.10+ (Windows: tick "Add to PATH"), Git, ffmpeg (script cài tự cài trên Windows bằng winget).
@@ -105,7 +120,7 @@ git clone https://github.com/Ryanhoang2994/tool-video-ytb.git coldcase_studio
 cd coldcase_studio
 install_windows.bat
 ```
-Linux / macOS: `bash install_linux_mac.sh`.
+Linux / macOS: `bash install_linux_mac.sh`. Cài xong bấm đúp `start_ui.bat` để mở giao diện.
 
 Sau đó: mở `.env` điền API key (file này KHÔNG có trên GitHub, mỗi máy tự điền), sửa `capcut.drafts_dir` trong `config.yaml`.
 Cập nhật tool khi có bản mới: `git pull` rồi `pip install -r requirements.txt`.

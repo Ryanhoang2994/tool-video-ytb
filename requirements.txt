@@ -22,3 +22,5 @@ pycapcut==0.0.4
 
 # Tuỳ chọn: tách nền người trong ảnh cho kiểu cắt dán (look: collage) giống hình cắt dán thật
 # rembg
+# Giao diện web (python studio.py ui)
+flask>=3.0

@@ -272,6 +272,12 @@ def cmd_all(a, cfg):
     log(f"XONG. Xem thư mục {p.path('output')}")
 
 
+def cmd_ui(a, cfg):
+    from webui.server import run
+
+    run(a.host, a.port, open_browser=not a.no_browser)
+
+
 def main():
     ap = argparse.ArgumentParser(description="Cold Case Studio")
     ap.add_argument("--config", default=None)
@@ -430,6 +436,12 @@ def main():
     s.add_argument("--drafts-dir")
     s.add_argument("--name")
     s.set_defaults(fn=cmd_capcut)
+
+    s = sub.add_parser("ui", help="mở giao diện web trên máy (http://127.0.0.1:7860)")
+    s.add_argument("--port", type=int, default=7860)
+    s.add_argument("--host", default="127.0.0.1", help="0.0.0.0 để máy khác trong mạng LAN mở được")
+    s.add_argument("--no-browser", action="store_true", help="không tự mở trình duyệt")
+    s.set_defaults(fn=cmd_ui)
 
     s = sub.add_parser("all", help="chạy toàn bộ pipeline")
     s.add_argument("slug")

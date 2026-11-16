@@ -3,8 +3,8 @@
 *.key
 
 # Dữ liệu từng video (ảnh, giọng, video dựng) - nặng, tạo lại được
-projects/
-library/
+/projects
+/library
 demo_videos/
 analysis/preview/
 voices/*
