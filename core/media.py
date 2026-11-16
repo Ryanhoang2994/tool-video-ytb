@@ -372,8 +372,12 @@ def collect_media(project: Project, cfg: dict, only: set[str] | None = None, can
     texts = itertools.chain([research.get("years", ""), script.get("title", ""), script.get("description", "")],
                             (s.get("on_screen_text", "") + " " + " ".join(s.get("search_queries_en", []))
                              for c in script["chapters"] for s in c["scenes"]))
-    yrs = [int(y) for t in texts for y in re.findall(r"\b(1[6-9]\d\d)s?\b", t or "")]
-    era = str(min(yrs)) if yrs and min(yrs) < 1990 else ""
+    # thời đại = khoảng năm người dùng nhập (--years); không có thì lấy năm Ở GIỮA các năm trong kịch bản
+    # (không lấy năm nhỏ nhất: kịch bản hay nhắc mốc lịch sử xa, vd "thị trấn lập năm 1870" trong vụ án 1912)
+    ry = re.findall(r"\b(1[6-9]\d\d)\b", research.get("years", "") or "")
+    yrs = sorted(int(y) for t in texts for y in re.findall(r"\b(1[6-9]\d\d)s?\b", t or ""))
+    mid = int(ry[0]) if ry else (yrs[len(yrs) // 2] if yrs else 0)
+    era = str(mid) if mid and mid < 1990 else ""
     if era:
         log(f"Thời đại vụ án: ~{era} -> bỏ ảnh/video quá hiện đại")
     use_clip = mc.get("clip_rank", "auto")
