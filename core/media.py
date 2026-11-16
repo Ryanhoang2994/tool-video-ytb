@@ -468,8 +468,10 @@ def collect_media(project: Project, cfg: dict, only: set[str] | None = None, can
                           [r for r in pool.values() if r["id"] not in used], use_clip=use_clip)
         # ảnh phải khớp NỘI DUNG CẢNH (từ khoá chính, không tính tên vụ án). Không khớp -> để ảnh AI bù.
         primary = (s.get("search_queries_en") or [""])[0]
-        topic_words = set(re.findall(r"[a-z0-9]{3,}", topic_terms.lower()))
-        prim = " ".join(w for w in re.findall(r"[a-zA-Z0-9]{3,}", primary) if w.lower() not in topic_words)
+        # chỉ bỏ TÊN RIÊNG của chủ đề (vd "Villisca"), giữ danh từ thường (vd "axe" trong "Villisca axe murders")
+        topic_words = {w.lower() for w in re.findall(r"\b[A-Z][a-zA-Z]{2,}", topic_terms)} or \
+            set(re.findall(r"[a-z0-9]{3,}", topic_terms.lower()))
+        prim = " ".join(w for w in re.findall(r"[a-zA-Z]{3,}", primary) if w.lower() not in topic_words)
         if not prim.strip():  # truy vấn cảnh = đúng chủ đề (vd "Greenland shark") -> vẫn phải khớp chủ đề
             prim = primary
         min_img = mc.get("image_min_relevance", 0.34)
@@ -478,9 +480,10 @@ def collect_media(project: Project, cfg: dict, only: set[str] | None = None, can
         proper = [w.lower() for w in re.findall(r"\b[A-Z][a-zA-Z]{2,}", prim) if w not in common]
 
         def _strip(q: str) -> str:
-            return " ".join(w for w in re.findall(r"[a-zA-Z0-9]{3,}", q) if w.lower() not in topic_words) or q
+            # bỏ tên vụ án + số/năm (năm đã lọc riêng bằng era) -> chỉ so NỘI DUNG (người, vật, nơi chốn)
+            return " ".join(w for w in re.findall(r"[a-zA-Z]{3,}", q) if w.lower() not in topic_words) or q
 
-        alt_qs = [_strip(q) for q in (s.get("search_queries_en") or [])[1:]]
+        alt_qs = [q for q in (_strip(q) for q in (s.get("search_queries_en") or [])[1:]) if q.strip()]
 
         def relevant(r: dict) -> bool:
             # chỉ so với TIÊU ĐỀ ảnh (trước đây cộng cả từ khoá đã dùng để tìm -> ảnh nào cũng "khớp")
@@ -513,6 +516,9 @@ def collect_media(project: Project, cfg: dict, only: set[str] | None = None, can
         for k in range(want_ai):
             dest = raw / f"ai_{s['id']}_{k}.jpg"
             pr = s["image_prompt_en"] if k == 0 else f"{s['image_prompt_en']}, different angle, wide shot"
+            if s["visual_type"] == "person" or (s.get("entity") or {}).get("name"):
+                # người THẬT không có ảnh thật: không vẽ mặt giả (tránh gây hiểu nhầm là ảnh của nạn nhân / nghi phạm)
+                pr += ", figure seen from behind or in deep shadow, face not visible, no identifiable face"
             f = dest if dest.exists() else ai_image(pr, dest, cfg, seed=zlib.crc32(s["id"].encode()) % 10000 + k)
             if f:
                 item = {"kind": "image", "file": str(f), "credit": "AI-generated illustration", "page": "",
