@@ -153,9 +153,13 @@ def http_get(url: str, *, params=None, headers=None, timeout=30, retries=4, stre
             r = _session.get(url, params=params, headers=headers, timeout=timeout, stream=stream)
             if r.status_code in (429, 503) or (r.status_code == 402 and "pollinations" in host):
                 _host_429.setdefault(host, []).append(time.time())
-                ra = r.headers.get("retry-after", "")
-                time.sleep(min(20.0, float(ra)) if ra.isdigit() else min(20, 2 ** (i + 1)))
                 last = requests.HTTPError(f"{r.status_code} {url[:80]}")
+                ai = "pollinations" in host  # ảnh AI: cần chờ hết lượt rồi thử lại
+                if not ai and i >= 1:  # ảnh/trang khác: chỉ thử lại 1 lần, rồi chuyển sang ảnh khác cho nhanh
+                    break
+                ra = r.headers.get("retry-after", "")
+                cap = 20.0 if ai else 5.0
+                time.sleep(min(cap, float(ra)) if ra.isdigit() else min(cap, 2 ** (i + 1)))
                 continue
             if 400 <= r.status_code < 500:  # 403/404...: thử lại vô ích -> báo lỗi ngay
                 r.raise_for_status()
