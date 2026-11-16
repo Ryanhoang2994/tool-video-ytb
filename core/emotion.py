@@ -291,9 +291,12 @@ def _parse(s: str) -> tuple[float, str, str, str] | None:
     if not m:
         return None
     raw = m.group(0)
-    sep = "." if re.search(r"\d\.\d{3}(\D|$)", raw) else ","
+    if re.fullmatch(r"\d+", raw):  # số không có dấu ngăn cách (vd năm 1912) -> giữ nguyên kiểu, không thêm dấu phẩy
+        sep = ""
+    else:
+        sep = "." if re.search(r"\d\.\d{3}(\D|$)", raw) else ","
     try:
-        v = float(raw.replace(sep, "").replace(",", "."))
+        v = float(raw.replace(sep, "").replace(",", ".") if sep else raw)
     except ValueError:
         return None
     return v, s[: m.start()], s[m.end():], sep
