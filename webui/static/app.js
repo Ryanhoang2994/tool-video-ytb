@@ -359,4 +359,29 @@ function viewHelp() {
     Dòng lệnh vẫn dùng được như cũ: <code>python studio.py --help</code>.</div>`;
 }
 
+// ---------------------------------------------------------------- phiên bản & cập nhật
+async function checkVersion(force) {
+  const el = $("#ver"); if (!el) return;
+  try {
+    const v = await api("/api/version" + (force ? "?force=1" : ""));
+    if (!v.git) { el.innerHTML = `<div style="margin-bottom:8px">Bản tải ZIP – muốn cập nhật bằng 1 nút thì cài bằng git clone</div>`; return; }
+    el.innerHTML = `<div style="margin-bottom:8px">Phiên bản <code>${esc(v.commit)}</code> · ${esc(v.date || "")}<br>
+      ${v.behind ? `<button class="btn small primary" id="upd" style="margin-top:6px">⬆ Có ${v.behind} bản cập nhật – cập nhật ngay</button>`
+        : `<a href="#" id="upd" style="font-size:12px">Kiểm tra cập nhật</a>`}</div>`;
+    $("#upd").onclick = async e => {
+      e.preventDefault();
+      if (!v.behind) { toast("Đang kiểm tra…"); return checkVersion(true).then(() => toast("Đã kiểm tra")); }
+      if (!confirm("Tải bản mới từ GitHub và cập nhật tool?")) return;
+      toast("Đang cập nhật…", 60000);
+      try {
+        const r = await api("/api/update", { method: "POST" });
+        alert(r.changed ? "Đã cập nhật xong:\n\n" + (r.log || r.output) + "\nTắt cửa sổ đen rồi bấm đúp start_ui.bat để chạy bản mới."
+          : "Đang là bản mới nhất.");
+        checkVersion(true);
+      } catch (x) { alert("Cập nhật lỗi: " + x.message); }
+    };
+  } catch (e) { el.textContent = ""; }
+}
+checkVersion();
+setInterval(checkVersion, 15 * 60 * 1000);
 route();

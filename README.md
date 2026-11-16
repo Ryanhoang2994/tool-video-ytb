@@ -123,7 +123,7 @@ install_windows.bat
 Linux / macOS: `bash install_linux_mac.sh`. Cài xong bấm đúp `start_ui.bat` để mở giao diện.
 
 Sau đó: mở `.env` điền API key (file này KHÔNG có trên GitHub, mỗi máy tự điền), sửa `capcut.drafts_dir` trong `config.yaml`.
-Cập nhật tool khi có bản mới: `git pull` rồi `pip install -r requirements.txt`.
+Cập nhật tool khi có bản mới: bấm nút **⬆ cập nhật** ở góc trái dưới của giao diện (tự báo khi có bản mới), hoặc bấm đúp `update.bat`. Chỉ tải phần thay đổi, dữ liệu video và `.env` giữ nguyên.
 
 Dữ liệu video (thư mục `projects/`, `library/`) không đẩy lên GitHub vì rất nặng. Muốn mang một dự án sang máy khác:
 `python studio.py pack <slug>` → chép file .zip sang máy mới → `python studio.py unpack <file.zip>`.

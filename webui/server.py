@@ -486,6 +486,54 @@ def api_script_json(slug):
     return jsonify({"chapters": len(data["chapters"]), "scenes": n, "job": job})
 
 
+_VER: dict = {"t": 0, "behind": 0}
+
+
+def _git(*args, timeout=60) -> subprocess.CompletedProcess:
+    return subprocess.run(["git", *args], cwd=ROOT, capture_output=True, text=True, encoding="utf-8",
+                          errors="replace", timeout=timeout)
+
+
+@app.get("/api/version")
+def api_version():
+    """Phiên bản đang chạy + có bản mới trên GitHub không (kiểm tra tối đa 10 phút/lần)."""
+    if not (ROOT / ".git").exists():
+        return jsonify({"git": False})
+    try:
+        info = _git("log", "-1", "--format=%h|%cd", "--date=format:%d/%m/%Y %H:%M").stdout.strip().split("|")
+        if time.time() - _VER["t"] > 600 or request.args.get("force"):
+            _git("fetch", "-q", "origin", timeout=30)
+            n = _git("rev-list", "--count", "HEAD..@{u}").stdout.strip()
+            _VER.update(t=time.time(), behind=int(n or 0))
+        return jsonify({"git": True, "commit": info[0], "date": info[1] if len(info) > 1 else "",
+                        "behind": _VER["behind"]})
+    except (OSError, subprocess.SubprocessError, ValueError):
+        return jsonify({"git": True, "commit": "?", "behind": 0})
+
+
+@app.post("/api/update")
+def api_update():
+    """Kéo bản mới từ GitHub (git pull) + cài thư viện mới nếu requirements.txt đổi."""
+    if not (ROOT / ".git").exists():
+        abort(400, "Thư mục này tải bằng ZIP nên không tự cập nhật được - hãy cài lại bằng git clone (xem README)")
+    if any(j["running"] for j in JOBS.values()):
+        abort(409, "Đang có việc chạy - chờ xong rồi cập nhật")
+    before = _git("rev-parse", "HEAD").stdout.strip()
+    r = _git("pull", "--ff-only", timeout=120)
+    out = (r.stdout + r.stderr).strip()
+    if r.returncode != 0:
+        abort(500, "git pull lỗi: " + out[-600:])
+    after = _git("rev-parse", "HEAD").stdout.strip()
+    changed = before != after
+    if changed and "requirements.txt" in _git("diff", "--name-only", before, after).stdout:
+        pr = subprocess.run([sys.executable, "-m", "pip", "install", "-q", "-r", str(ROOT / "requirements.txt")],
+                            cwd=ROOT, capture_output=True, text=True, errors="replace", timeout=1800)
+        out += "\n" + (pr.stdout + pr.stderr)[-1500:]
+    log = _git("log", "--format=• %s", f"{before}..{after}").stdout if changed else ""
+    _VER.update(t=0)
+    return jsonify({"changed": changed, "output": out, "log": log})
+
+
 def _has_claude() -> bool:
     return bool(os.environ.get("ANTHROPIC_API_KEY") or _env_values().get("ANTHROPIC_API_KEY"))
 
