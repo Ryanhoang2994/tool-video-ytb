@@ -1,3 +1,24 @@
+# Chạy tool trên VPS Google Cloud (bản mới – lấy từ GitHub, có giao diện)
+
+1. Google Cloud Console → **Compute Engine → VM instances → Create instance**
+   - Name: `coldcase-vps` · Region: `asia-southeast1` (Singapore) · Zone: `asia-southeast1-b`
+   - Machine: **e2-standard-8** (8 vCPU, 32 GB) để dựng video nhanh — hoặc e2-standard-4 cho rẻ
+   - Boot disk: **Ubuntu 24.04 LTS**, **100 GB**, Balanced persistent disk → **Create**
+2. Bấm **SSH** cạnh máy vừa tạo (mở cửa sổ dòng lệnh trên trình duyệt), chạy:
+   ```
+   sudo apt-get update && sudo apt-get install -y gh
+   gh auth login        # GitHub.com → HTTPS → Login with a web browser → nhập mã trên trình duyệt
+   gh repo clone Ryanhoang2994/tool-video-ytb coldcase_studio
+   bash coldcase_studio/deploy/vps_setup.sh
+   ~/.local/bin/claude   # đăng nhập Claude (Claude account with subscription), rồi /exit
+   ```
+3. Trên máy bạn (đã cài Google Cloud CLI):
+   `gcloud compute ssh coldcase-vps --zone asia-southeast1-b -- -L 7860:localhost:7860`
+   rồi mở **http://127.0.0.1:7860** – giao diện y như trên máy bạn nhưng chạy trên VPS.
+4. Không dùng thì **Stop** máy trong Console (chỉ trả tiền ổ đĩa ~4 USD/tháng). e2-standard-8 ≈ 0,27 USD/giờ khi bật.
+
+---
+
 # Hướng dẫn dựng VPS Google Cloud để chạy Cold Case Studio
 
 Có 2 cách dùng VPS:

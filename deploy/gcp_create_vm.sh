@@ -24,9 +24,12 @@ gcloud compute instances create "$NAME" \
   "${EXTRA[@]}"
 
 echo
-echo "Đợi ~3 phút cho máy cài xong, rồi:"
-echo "  gcloud compute scp --zone $ZONE coldcase_studio.zip $NAME:~/"
+echo "Xong. Tiếp theo:"
 echo "  gcloud compute ssh --zone $ZONE $NAME"
-echo "  # trên VPS:  unzip coldcase_studio.zip && cd coldcase_studio && bash deploy/vm_install_tool.sh"
+echo "  # trên VPS:"
+echo "  sudo apt-get install -y gh && gh auth login        # đăng nhập GitHub (Login with a web browser)"
+echo "  gh repo clone Ryanhoang2994/tool-video-ytb coldcase_studio && bash coldcase_studio/deploy/vps_setup.sh"
+echo "Mở giao diện từ máy bạn:"
+echo "  gcloud compute ssh --zone $ZONE $NAME -- -L 7860:localhost:7860    -> http://127.0.0.1:7860"
 echo "Tắt máy khi không dùng (không mất dữ liệu, chỉ trả tiền ổ đĩa):"
 echo "  gcloud compute instances stop --zone $ZONE $NAME"
