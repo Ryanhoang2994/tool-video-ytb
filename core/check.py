@@ -80,8 +80,9 @@ def check_sources(script, cfg) -> list[str]:
     st = (cfg.get("project") or {}).get("story_type")
     if st == "fiction":
         first = _scenes(script)[0]["narration"].lower() if _scenes(script) else ""
-        out.append((OK if "hư cấu" in first else WARN) + " Truyện hư cấu: câu báo 'hư cấu' ở cảnh đầu"
-                   + ("" if "hư cấu" in first else " CHƯA có (thẻ cảnh báo vẫn được chèn tự động)"))
+        has = any(w in first for w in ("hư cấu", "fiction", "fictional", "imaginary"))
+        out.append((OK if has else WARN) + " Truyện hư cấu: câu báo 'hư cấu' ở cảnh đầu"
+                   + ("" if has else " CHƯA có (thẻ cảnh báo vẫn được chèn tự động)"))
     return out or [f"{OK} Không có số liệu cần nguồn"]
 
 

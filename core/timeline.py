@@ -144,7 +144,8 @@ def build_timeline(project: Project, cfg: dict) -> dict:
                 chapter_starts.append(0.0)
                 st = (cfg.get("project") or {}).get("story_type")
                 if st == "fiction":  # truyện hư cấu: thẻ cảnh báo trước khi vào truyện
-                    add_card(graphics.bold_card("", "Truyện hư cấu - mọi nhân vật và sự kiện đều do tưởng tượng",
+                    add_card(graphics.bold_card("", "Truyện hư cấu - mọi nhân vật và sự kiện đều do tưởng tượng" if vi
+                                                else "A work of fiction - all characters and events are imaginary",
                                                 cards / "fiction.jpg", None, W, H, dark=True), 3.0, "chapter", "fiction")
 
             dur = timing[s["id"]]["duration"] + pause + float(s.get("pause_after") or 0)  # khoảng lặng sau câu chốt
@@ -227,12 +228,25 @@ def build_timeline(project: Project, cfg: dict) -> dict:
           "chapter_starts": chapter_starts}
     project.write_json("timeline.json", tl)
     _write_srt(project, tl)
-    _write_youtube_meta(project, script, tl)
+    _write_youtube_meta(project, script, tl, ch.get("language", "vi"))
     log(f"✓ Timeline: {len(items)} block, {sum(len(i['shots']) for i in items)} shot, {tl['duration'] / 60:.1f} phút")
     return tl
 
 
+def _wrap2(c: str, limit: int = 44) -> str:
+    """Câu dài -> 2 dòng cân nhau (ngắt ở khoảng trắng gần giữa nhất)."""
+    if len(c) <= limit:
+        return c
+    mid = len(c) // 2
+    sp = [i for i, ch in enumerate(c) if ch == " "]
+    if not sp:
+        return c
+    k = min(sp, key=lambda i: abs(i - mid))
+    return c[:k] + "\n" + c[k + 1:]
+
+
 def _write_srt(project: Project, tl: dict) -> Path:
+    last_end = 0.0
     lines, n = [], 0
     for it in tl["items"]:
         if it["type"] != "scene":
@@ -245,21 +259,30 @@ def _write_srt(project: Project, tl: dict) -> Path:
 
             norm = _norm(it["text"])
             pos = 0
+            spans = []
             for c in chunks:
                 i0 = norm.find(_norm(c), pos)
                 i0 = pos if i0 < 0 else i0
                 i1 = i0 + len(c)
                 pos = i1
-                t0, t1 = it["start"] + at_time(pts, i0), it["start"] + at_time(pts, min(i1, len(norm)))
+                spans.append([it["start"] + at_time(pts, i0), it["start"] + at_time(pts, min(i1, len(norm))), c])
+            for k, (t0, t1, c) in enumerate(spans):  # không chồng lấn: bắt đầu sau dòng trước, kết thúc trước dòng sau
+                t0 = max(t0, last_end + 0.01)
+                nxt = spans[k + 1][0] if k + 1 < len(spans) else it["start"] + it["duration"]
+                t1 = min(max(t0 + 0.4, t1 - 0.05), nxt - 0.02)
+                if t1 <= t0:
+                    t1 = t0 + 0.2
                 n += 1
-                lines.append(f"{n}\n{_ts(t0)} --> {_ts(max(t0 + 0.3, t1 - 0.05))}\n{c}\n")
+                lines.append(f"{n}\n{_ts(t0)} --> {_ts(t1)}\n{_wrap2(c)}\n")
+                last_end = t1
             continue
         t = it["start"]
         for c in chunks:
             d = it["audio_dur"] * len(c) / total
             n += 1
-            lines.append(f"{n}\n{_ts(t)} --> {_ts(t + d - 0.05)}\n{c}\n")
+            lines.append(f"{n}\n{_ts(t)} --> {_ts(t + d - 0.05)}\n{_wrap2(c)}\n")
             t += d
+            last_end = t - 0.05
     p = project.path("output", "subtitles.srt")
     p.write_text("\n".join(lines), encoding="utf-8")
     return p
@@ -271,8 +294,9 @@ def cfg_lang(project: Project) -> str:
     return load_config().get("channel", {}).get("language", "en")
 
 
-def _write_youtube_meta(project: Project, script: dict, tl: dict) -> None:
-    intro = "Intro" if cfg_lang(project) == "en" else "Mở đầu"
+def _write_youtube_meta(project: Project, script: dict, tl: dict, lang: str = "") -> None:
+    lang = lang or cfg_lang(project)
+    intro = "Intro" if lang == "en" else "Mở đầu"
     chap_lines = [f"0:00 {intro}"] if tl["chapter_starts"] and tl["chapter_starts"][0] > 0 else []
     for c, t0 in zip(script["chapters"], tl["chapter_starts"]):
         chap_lines.append(f"{_yt(t0)} {c['title']}")
