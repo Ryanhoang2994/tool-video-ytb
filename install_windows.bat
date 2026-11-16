@@ -6,13 +6,22 @@ echo   Cold Case Studio - cai dat
 echo ============================================
 echo.
 
-rem ---- 1. Python ----
+rem ---- 1. Python: uu tien 3.12 (ban moi qua nhu 3.14/3.15 nhieu thu vien chua ho tro) ----
 set "PY="
-python -c "import sys" >nul 2>nul && set "PY=python"
-if not defined PY py -3 -c "import sys" >nul 2>nul && set "PY=py -3"
+py -3.12 -c "import sys" >nul 2>nul && set "PY=py -3.12"
+if not defined PY py -3.11 -c "import sys" >nul 2>nul && set "PY=py -3.11"
+if not defined PY py -3.13 -c "import sys" >nul 2>nul && set "PY=py -3.13"
+if defined PY goto pyok
+where py >nul 2>nul
+if errorlevel 1 goto trypython
+echo [..] Dang cai Python 3.12 (neu duoc hoi, go Y roi Enter)...
+py install 3.12
+py -3.12 -c "import sys" >nul 2>nul && set "PY=py -3.12"
+if defined PY goto pyok
+:trypython
+python -c "import sys; sys.exit(0 if (3, 10) <= sys.version_info[:2] <= (3, 13) else 1)" >nul 2>nul && set "PY=python"
 if not defined PY goto nopython
-%PY% -c "import sys; sys.exit(0 if sys.version_info >= (3, 10) else 1)"
-if errorlevel 1 goto oldpython
+:pyok
 for /f "delims=" %%v in ('%PY% --version') do echo [OK] %%v
 
 rem ---- 2. ffmpeg ----
@@ -68,9 +77,9 @@ if errorlevel 1 (
 exit /b
 
 :nopython
-echo [!] Chua co Python (hoac chua tick "Add python.exe to PATH").
+echo [!] Chua co Python 3.10 - 3.13 (hoac chua tick "Add python.exe to PATH").
 echo.
-echo     1. Tai Python 3.12 o trang vua mo: https://www.python.org/downloads/
+echo     1. Tai Python 3.12 o trang vua mo (keo xuong muc "Looking for a specific release", chon 3.12.x)
 echo     2. Khi cai, nho TICK o "Add python.exe to PATH" o man hinh dau tien
 echo     3. Cai xong, TAT cua so nay, mo cua so cmd MOI roi chay lai install_windows.bat
 start "" https://www.python.org/downloads/
