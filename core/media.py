@@ -278,9 +278,13 @@ def find_entity_image(lib: Library, ent: dict, srcs: list[str]) -> dict | None:
         return None
     q = ent.get("search_query_en") or ent.get("name")
 
+    not_face = re.compile(r"\b(house|home|building|grave|gravestone|tomb|cemetery|street|map|church|store|farm|"
+                          r"marker|plaque|nrhp|historic district|museum)\b", re.I)
+
     def ok(r: dict) -> bool:
         t = norm(r["title"] + " " + r.get("page", ""))
-        return all(tok in t for tok in tokens)
+        # phải đủ họ tên VÀ không phải ảnh nhà / mộ / bản đồ... (thẻ tên cần ảnh chân dung)
+        return all(tok in t for tok in tokens) and not not_face.search(r["title"])
 
     pool = [r for r in lib.local_search(q, 40) if ok(r)]
     if not pool:
@@ -473,16 +477,21 @@ def collect_media(project: Project, cfg: dict, only: set[str] | None = None, can
         common = {"The", "A", "An", "Of", "In", "On", "At", "And", "Old", "New", "Night", "Police", "Navy", "Army"}
         proper = [w.lower() for w in re.findall(r"\b[A-Z][a-zA-Z]{2,}", prim) if w not in common]
 
+        def _strip(q: str) -> str:
+            return " ".join(w for w in re.findall(r"[a-zA-Z0-9]{3,}", q) if w.lower() not in topic_words) or q
+
+        alt_qs = [_strip(q) for q in (s.get("search_queries_en") or [])[1:]]
+
         def relevant(r: dict) -> bool:
             # chỉ so với TIÊU ĐỀ ảnh (trước đây cộng cả từ khoá đã dùng để tìm -> ảnh nào cũng "khớp")
             title = r["title"]
-            if s["visual_type"] == "board" or not prim:
+            if not prim:
                 return True
             if proper and not all(pn in title.lower() for pn in proper):
                 return False  # tên riêng (người, địa danh, tên tàu...) phải có trong tiêu đề ảnh
-            if s["visual_type"] == "person" and not proper:
-                return True  # chân dung minh hoạ chung (không phải người cụ thể)
-            return keyword_score(prim, title) >= min_img or keyword_score(primary, title) >= 0.67
+            if keyword_score(prim, title) >= min_img or keyword_score(primary, title) >= 0.67:
+                return True
+            return not proper and any(keyword_score(q, title) >= max(min_img, 0.4) for q in alt_qs)
 
         ranked = [r for r in ranked if relevant(r) and era_ok_strict(f"{primary} {era}", r["title"])]
         for r in ranked:
