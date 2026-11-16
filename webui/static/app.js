@@ -397,10 +397,11 @@ async function checkVersion(force) {
       toast("Đang cập nhật…", 60000);
       try {
         const r = await api("/api/update", { method: "POST" });
+        toast(r.changed ? "Cập nhật xong" : "Đang là bản mới nhất", 2500);
         alert(r.changed ? "Đã cập nhật xong:\n\n" + (r.log || r.output) + "\nTắt cửa sổ đen rồi bấm đúp start_ui.bat để chạy bản mới."
           : "Đang là bản mới nhất.");
         checkVersion(true);
-      } catch (x) { alert("Cập nhật lỗi: " + x.message); }
+      } catch (x) { toast("Cập nhật lỗi", 2500); alert("Cập nhật lỗi: " + x.message); }
     };
   } catch (e) { el.textContent = ""; }
 }
