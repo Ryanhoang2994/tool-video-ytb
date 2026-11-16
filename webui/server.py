@@ -601,8 +601,22 @@ def _env_values() -> dict:
     return vals
 
 
+def _port_busy(host: str, port: int) -> bool:
+    import socket
+
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sk:
+        sk.settimeout(0.5)
+        return sk.connect_ex(("127.0.0.1" if host in ("0.0.0.0", "") else host, port)) == 0
+
+
 def run(host: str = "127.0.0.1", port: int = 7860, open_browser: bool = True) -> None:
     url = f"http://{'127.0.0.1' if host in ('0.0.0.0', '') else host}:{port}"
+    if _port_busy(host, port):  # đã có một cửa sổ tool đang chạy -> chỉ mở trình duyệt
+        print(f"\n  Tool đã đang chạy ở một cửa sổ khác: {url}")
+        print("  Đang mở trình duyệt... (muốn chạy bản mới: tắt hết cửa sổ đen cũ rồi mở lại start_ui.bat)\n")
+        if open_browser:
+            __import__("webbrowser").open(url)
+        return
     print(f"\n  Cold Case Studio đang chạy: {url}\n  (Ctrl+C để tắt)\n")
     if open_browser:
         threading.Timer(1.0, lambda: __import__("webbrowser").open(url)).start()
