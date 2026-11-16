@@ -431,18 +431,17 @@ def make_voice(project: Project, cfg: dict, redo: set[str] | None = None) -> dic
     scenes = [s for c in script["chapters"] for s in c["scenes"]]
     if not scenes:
         raise SystemExit("Kịch bản chưa có cảnh nào - chạy lại bước Kịch bản (chủ đề nên cụ thể hơn).")
-    for i, s in enumerate(scenes, 1):
+    lang = cfg["channel"].get("language", "vi")
+
+    def one(i: int, s: dict) -> None:
         out = project.path("audio", f"{s['id']}.wav")
-        if s.get("locked") and out.exists() and s["id"] in timing:  # cảnh đã khoá: giữ giọng đã chọn
-            continue
-        if out.exists() and s["id"] in timing and not (redo and s["id"] in redo) \
-                and timing[s["id"]].get("text") == s["narration"]:
-            continue
         log(f"[{i}/{len(scenes)}] đọc {s['id']} ({len(s['narration'].split())} từ)")
         eng.synth(s["narration"], out)
         # Dàn giọng: câu trích dẫn (cảnh "quote") đọc bằng giọng riêng của nhân vật ngay sau lời dẫn
         who = ((s.get("entity") or {}).get("name") or "").strip().upper()
         cvoice = cast.get(who)
+        if cvoice and lang == "en" and isinstance(eng, EdgeTTS) and not str(cvoice).startswith("en-"):
+            cvoice = None  # giọng nhân vật cài cho bản tiếng Việt (VieNeu) không dùng được cho tiếng Anh
         quote = (s.get("on_screen_text") or "").strip()
         already = quote and quote.lower().strip('"“”.') in s["narration"].lower()
         if s.get("visual_type") == "quote" and quote and not already:
@@ -459,6 +458,26 @@ def make_voice(project: Project, cfg: dict, redo: set[str] | None = None) -> dic
             qwav.unlink(missing_ok=True)
         timing[s["id"]] = {"duration": ffprobe_duration(out), "text": s["narration"]}
         project.write_json("timing.json", timing)
+
+    failed: list[tuple[int, dict]] = []
+    for i, s in enumerate(scenes, 1):
+        out = project.path("audio", f"{s['id']}.wav")
+        if s.get("locked") and out.exists() and s["id"] in timing:  # cảnh đã khoá: giữ giọng đã chọn
+            continue
+        if out.exists() and s["id"] in timing and not (redo and s["id"] in redo) \
+                and timing[s["id"]].get("text") == s["narration"]:
+            continue
+        try:
+            one(i, s)
+        except Exception as e:  # noqa: BLE001  - 1 cảnh lỗi (dịch vụ giọng chập chờn): đọc tiếp cảnh khác, thử lại sau
+            log(f"  ! {s['id']} lỗi ({type(e).__name__}) - để thử lại ở cuối")
+            failed.append((i, s))
+    for i, s in failed:  # thử lại các cảnh lỗi 1 lần nữa
+        try:
+            one(i, s)
+        except Exception as e:  # noqa: BLE001
+            raise SystemExit(f"Không đọc được cảnh {s['id']} sau nhiều lần thử ({e}). Chạy lại bước Giọng đọc để thử tiếp "
+                             "(các cảnh đã xong được giữ nguyên).")
     total = sum(t["duration"] for t in timing.values())
     log(f"✓ Giọng đọc xong: {total / 60:.1f} phút")
     return timing
