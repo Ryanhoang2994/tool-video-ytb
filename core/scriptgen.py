@@ -277,6 +277,93 @@ class ClaudeWriter:
         return json.loads(text)
 
 
+# ------------------------------------------------------------------ Claude Code (dùng gói Claude, không cần API key)
+
+def claude_cli() -> str | None:
+    """Đường dẫn lệnh `claude` (Claude Code) nếu đã cài."""
+    import shutil
+
+    exe = shutil.which("claude")
+    if exe:
+        return exe
+    for c in (Path.home() / ".local" / "bin" / "claude.exe", Path.home() / ".local" / "bin" / "claude",
+              Path.home() / "AppData" / "Roaming" / "npm" / "claude.cmd"):
+        if c.exists():
+            return str(c)
+    return None
+
+
+class ClaudeCodeWriter:
+    """Gọi Claude Code ở chế độ không tương tác (claude -p). Tính vào gói Claude (Pro/Max) đã đăng nhập,
+    không cần ANTHROPIC_API_KEY. Cài: xem README mục 'Dùng gói Claude'."""
+
+    def __init__(self, cfg: dict):
+        self.exe = claude_cli()
+        if not self.exe:
+            raise SystemExit("Chưa cài Claude Code (lệnh `claude`). Xem README mục 'Dùng gói Claude'.")
+        self.model = (cfg.get("script") or {}).get("claude_code_model") or ""
+
+    def ask_json(self, system: str, user: str, schema: dict) -> dict:
+        import subprocess
+
+        shim = self.exe.lower().endswith((".cmd", ".bat"))  # bản cài qua npm: tránh tham số dài/đặc biệt qua cmd.exe
+        cmd = [self.exe, "-p", "--output-format", "json", "--no-session-persistence"]
+        if self.model:
+            cmd += ["--model", self.model]
+        if shim:
+            stdin = (f"{system}\n\n{user}\n\nCHỈ trả về MỘT khối JSON hợp lệ theo JSON Schema sau, không giải thích:\n"
+                     f"{json.dumps(schema, ensure_ascii=False)}")
+        else:
+            cmd += ["--json-schema", json.dumps(schema), "--tools", "", "--system-prompt", system]
+            stdin = user
+        r = subprocess.run(cmd, input=stdin, capture_output=True, text=True, encoding="utf-8", errors="replace",
+                           timeout=3600)
+        try:
+            out = json.loads(r.stdout)
+        except ValueError:
+            raise RuntimeError("Claude Code không trả kết quả: " + (r.stderr or r.stdout)[-600:])
+        if out.get("is_error"):
+            msg = str(out.get("result") or out.get("subtype") or "")
+            if "login" in msg.lower() or "api key" in msg.lower():
+                msg += "  -> Mở cmd, gõ `claude`, đăng nhập bằng tài khoản Claude rồi thử lại."
+            raise RuntimeError("Claude Code báo lỗi: " + msg[-600:])
+        if isinstance(out.get("structured_output"), dict):
+            return out["structured_output"]
+        txt = str(out.get("result") or "")
+        txt = re.sub(r"```(?:json)?", "", txt)
+        k = txt.find("{")
+        if k < 0:
+            raise RuntimeError("Claude Code không trả JSON: " + txt[:300])
+        return json.JSONDecoder().raw_decode(txt, k)[0]
+
+
+def llm_backend(cfg: dict | None = None) -> str:
+    """api (ANTHROPIC_API_KEY) | claude_code (gói Claude qua Claude Code) | none.
+    script.backend trong config: auto (mặc định) | api | claude_code."""
+    import os
+
+    want = ((cfg or {}).get("script") or {}).get("backend", "auto")
+    has_key = bool(os.getenv("ANTHROPIC_API_KEY"))
+    if want == "api":
+        return "api" if has_key else "none"
+    if want == "claude_code":
+        return "claude_code" if claude_cli() else "none"
+    if has_key:
+        return "api"
+    return "claude_code" if claude_cli() else "none"
+
+
+def get_writer(cfg: dict):
+    b = llm_backend(cfg)
+    if b == "api":
+        return ClaudeWriter(cfg)
+    if b == "claude_code":
+        log("Viết bằng Claude Code (gói Claude của bạn, không dùng API key)")
+        return ClaudeCodeWriter(cfg)
+    raise SystemExit("Chưa có cách gọi Claude: cài Claude Code + đăng nhập tài khoản Claude (không cần API key), "
+                     "hoặc điền ANTHROPIC_API_KEY, hoặc dùng khung 'Viết kịch bản bằng claude.ai' trên giao diện.")
+
+
 def allowed_visuals(cfg: dict) -> str:
     v = cfg.get("script", {}).get("visual_types")
     return f"- visual_type CHỈ dùng các loại: {', '.join(v)}." if v else ""
@@ -368,7 +455,7 @@ def write_script_auto(project: Project, cfg: dict) -> dict:
     research = project.read_json("research.json")
     if not research:
         raise SystemExit("Chưa có research.json - chạy lệnh research trước.")
-    w = ClaudeWriter(cfg)
+    w = get_writer(cfg)
     outline = project.read_json("outline.json")
     if not outline:
         log(f"Claude ({w.model}) đang lập dàn ý...")

@@ -336,7 +336,7 @@ def api_run(slug):
         if steps != ["script"] and not _status(PROJECTS / slug)["research"]:
             steps = ["research"]
         else:
-            abort(400, "Chưa có ANTHROPIC_API_KEY - dùng khung 'Viết kịch bản bằng claude.ai' ngay bên dưới")
+            abort(400, "Chưa có Claude Code hay API key - xem trang 'Claude / API key', hoặc dùng khung 'Viết kịch bản bằng claude.ai' bên dưới")
     cmds = []
     for st in steps:
         if st not in STEP_CMDS:
@@ -535,7 +535,31 @@ def api_update():
 
 
 def _has_claude() -> bool:
-    return bool(os.environ.get("ANTHROPIC_API_KEY") or _env_values().get("ANTHROPIC_API_KEY"))
+    """Có cách gọi Claude tự động: API key hoặc Claude Code (gói Claude) đã cài."""
+    from core.scriptgen import claude_cli
+
+    return bool(os.environ.get("ANTHROPIC_API_KEY") or _env_values().get("ANTHROPIC_API_KEY") or claude_cli())
+
+
+@app.get("/api/claude-code")
+def api_claude_code():
+    """Trạng thái Claude Code. ?test=1: gửi 1 câu ngắn để kiểm tra đã đăng nhập chưa (tốn rất ít lượt dùng)."""
+    from core.scriptgen import claude_cli
+
+    exe = claude_cli()
+    out = {"installed": bool(exe), "path": exe or ""}
+    if exe and request.args.get("test"):
+        err = ""
+        try:
+            r = subprocess.run([exe, "-p", "--output-format", "json", "--no-session-persistence"],
+                               input="Chỉ trả lời đúng một chữ: OK", capture_output=True, text=True,
+                               encoding="utf-8", errors="replace", timeout=120)
+            err = (r.stderr or r.stdout)[-300:]
+            d = json.loads(r.stdout)
+            out.update(ok=not d.get("is_error"), message=str(d.get("result") or "")[:300])
+        except (ValueError, OSError, subprocess.SubprocessError) as e:
+            out.update(ok=False, message=f"{e} {err}".strip())
+    return jsonify(out)
 
 
 @app.get("/api/env")

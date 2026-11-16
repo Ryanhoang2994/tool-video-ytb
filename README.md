@@ -111,6 +111,19 @@ Hoặc gõ: `python studio.py ui`.
 
 Giao diện chỉ mở trên máy bạn (127.0.0.1). Muốn máy khác trong cùng mạng LAN mở được: `python studio.py ui --host 0.0.0.0`.
 
+## Dùng gói Claude (Pro/Max) thay cho API key
+
+Tool gọi **Claude Code** (công cụ chính chủ của Anthropic) đăng nhập bằng tài khoản Claude của bạn → không cần `ANTHROPIC_API_KEY`,
+tính vào lượt dùng của gói Claude.
+
+1. Mở **PowerShell**, dán: `irm https://claude.ai/install.ps1 | iex`
+2. Mở **cmd mới**, gõ `claude` → chọn đăng nhập bằng tài khoản Claude → làm theo trên trình duyệt → gõ `/exit`.
+3. Mở lại giao diện (`start_ui.bat`) → trang **Claude / API key** → "Kiểm tra đăng nhập" phải báo ✓.
+
+Tool tự chọn: có `ANTHROPIC_API_KEY` thì dùng API, không có thì dùng Claude Code. Ép dùng 1 cách: `script.backend: claude_code`
+(hoặc `api`) trong `config.yaml`. Chọn model: `script.claude_code_model: sonnet` (mặc định theo gói của bạn).
+Không cài gì cả vẫn làm được: giao diện có khung "Viết kịch bản bằng claude.ai" để dán tay.
+
 ## 1a. Cài trên máy mới từ GitHub
 
 Cần: Python 3.10+ (Windows: tick "Add to PATH"), Git, ffmpeg (script cài tự cài trên Windows bằng winget).

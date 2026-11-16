@@ -89,12 +89,12 @@ ends with "--ar 16:9". Vary composition so consecutive images don't look the sam
 
 
 def generate(project: Project, cfg: dict) -> dict:
-    from .scriptgen import ClaudeWriter
+    from .scriptgen import get_writer
 
     script = project.read_json("script.json")
     if not script:
         raise SystemExit("Chưa có script.json")
-    w = ClaudeWriter(cfg)
+    w = get_writer(cfg)
     data = project.read_json("image_prompts.json", {})
     if "style" not in data:
         log("Claude tạo style bible + nhân vật...")

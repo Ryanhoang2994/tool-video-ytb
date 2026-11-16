@@ -248,7 +248,9 @@ def cmd_all(a, cfg):
     if cfg["media"].get("mode") == "ai_only":
         from core import imageprompts
 
-        if not p.read_json("image_prompts.json") and os.getenv("ANTHROPIC_API_KEY"):
+        from core.scriptgen import llm_backend
+
+        if not p.read_json("image_prompts.json") and llm_backend(cfg) != "none":
             imageprompts.generate(p, cfg)
         media.collect_ai_only(p, cfg)
     else:

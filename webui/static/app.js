@@ -102,7 +102,8 @@ function card(p) {
 async function viewNew() {
   if (!presets.length) presets = await api("/api/presets");
   envKeys = await api("/api/env");
-  const hasClaude = envKeys.find(k => k.key === "ANTHROPIC_API_KEY")?.set;
+  const cc = await api("/api/claude-code").catch(() => ({ installed: false }));
+  const hasClaude = envKeys.find(k => k.key === "ANTHROPIC_API_KEY")?.set || cc.installed;
   let cur = "crime_doc";
   app.innerHTML = `
     <h1>Tạo video mới</h1><div class="sub">Chọn phong cách, nhập chủ đề – tool tự tìm tư liệu, viết kịch bản, đọc, tìm hình và dựng.</div>
@@ -123,7 +124,7 @@ async function viewNew() {
       <label>Kịch bản có sẵn (tuỳ chọn) – dán văn bản, hoặc JSON theo mẫu trong thư mục <code>examples/</code>. Có kịch bản thì bỏ qua bước tìm tư liệu + Claude viết.</label>
       <textarea id="own" rows="6" placeholder="# Chương 1&#10;Đoạn lời đọc..."></textarea>
     </details>
-    ${hasClaude ? "" : `<div class="warn"><b>Không có API key cũng làm được.</b> Tool vẫn tự tìm tư liệu, sau đó đưa bạn một <b>lời nhắc</b> để dán vào
+    ${hasClaude ? "" : `<div class="warn"><b>Chưa kết nối Claude.</b> Cách dễ nhất: cài <b>Claude Code</b> và đăng nhập tài khoản Claude của bạn (không cần API key) – xem trang <a href="#/settings">Claude / API key</a>.<br><b>Hoặc làm tay:</b> Tool vẫn tự tìm tư liệu, sau đó đưa bạn một <b>lời nhắc</b> để dán vào
       <a href="https://claude.ai" target="_blank" rel="noopener">claude.ai</a> (dùng gói Claude bạn đang có). Dán kết quả trả về vào ô trên trang dự án là tool chạy tiếp
       giọng đọc → hình → dựng video. Muốn tự động hoàn toàn thì thêm <b>ANTHROPIC_API_KEY</b> ở trang <a href="#/settings">API key</a>.</div>`}
     <div class="cols" style="margin-top:6px">
@@ -330,7 +331,20 @@ async function saveScene(el, rebuild) {
 // ---------------------------------------------------------------- API key
 async function viewSettings() {
   envKeys = await api("/api/env");
-  app.innerHTML = `<h1>API key</h1><div class="sub">Lưu vào file <code>.env</code> trên máy bạn (không đẩy lên GitHub). Không key nào bắt buộc – mỗi key mở thêm một chức năng.</div>
+  const cc = await api("/api/claude-code").catch(() => ({ installed: false }));
+  app.innerHTML = `<h1>Claude & API key</h1>
+    <div class="panel" style="border-color:${cc.installed ? "rgba(61,214,140,.45)" : "var(--accent2)"}">
+      <h2 style="margin-top:0">Claude Code – dùng gói Claude của bạn, không cần API key ${cc.installed ? `<span class="pill ok">✓ đã cài</span>` : `<span class="pill">chưa cài</span>`}</h2>
+      ${cc.installed ? `<div class="sub" style="margin-bottom:8px">Tool sẽ tự gọi Claude Code để viết kịch bản (tính vào gói Pro/Max). Lần đầu cần đăng nhập.</div>
+        <div class="row"><button class="btn small" id="cctest">Kiểm tra đăng nhập</button><span id="ccres" class="sub" style="margin:0"></span></div>`
+      : `<div style="line-height:1.8">
+        <b>1.</b> Bấm phím Windows, gõ <b>PowerShell</b>, mở lên rồi dán lệnh này (cài Claude Code chính chủ của Anthropic):<br>
+        <code style="font-size:13px;user-select:all">irm https://claude.ai/install.ps1 | iex</code><br>
+        <b>2.</b> Cài xong, mở <b>cmd mới</b>, gõ <code>claude</code> → chọn đăng nhập bằng <b>tài khoản Claude (Claude.ai subscription)</b> → làm theo trên trình duyệt → gõ <code>/exit</code> để thoát.<br>
+        <b>3.</b> Tắt cửa sổ đen của tool rồi bấm đúp <code>start_ui.bat</code> lại. Trang này sẽ hiện "✓ đã cài".</div>`}
+    </div>
+    <h2>API key (tuỳ chọn)</h2><div class="sub">Lưu vào file <code>.env</code> trên máy bạn (không đẩy lên GitHub). Không key nào bắt buộc – mỗi key mở thêm một chức năng.
+      Đã dùng Claude Code thì <b>không cần</b> ANTHROPIC_API_KEY.</div>
     <div class="panel"><table class="keys">${envKeys.map(k => `<tr>
       <td style="width:220px"><b>${k.key}</b><br><span class="sub" style="font-size:12px">${esc(k.price)}</span></td>
       <td>${esc(k.desc)}<br><a href="https://${k.where}" target="_blank" rel="noopener" style="font-size:12px">${esc(k.where)}</a></td>
@@ -338,6 +352,14 @@ async function viewSettings() {
       <td style="width:280px"><input type="password" autocomplete="off" data-key="${k.key}" placeholder="${k.set ? "nhập để thay key mới" : "dán key vào đây"}"></td>
       <td style="width:60px">${k.set ? `<button class="btn small" data-clear="${k.key}">Xoá</button>` : ""}</td></tr>`).join("")}</table>
     <div class="row" style="margin-top:14px"><button class="btn primary" id="save">Lưu key</button></div></div>`;
+  const ct = $("#cctest");
+  if (ct) ct.onclick = async () => {
+    $("#ccres").textContent = "Đang hỏi thử Claude…"; ct.disabled = true;
+    const r = await api("/api/claude-code?test=1").catch(e => ({ ok: false, message: e.message }));
+    $("#ccres").innerHTML = r.ok ? `<span style="color:var(--ok)">✓ Đã đăng nhập, dùng được</span>`
+      : `<span style="color:var(--accent2)">Chưa dùng được: ${esc(r.message || "")} – mở cmd, gõ <code>claude</code> để đăng nhập.</span>`;
+    ct.disabled = false;
+  };
   $("#save").onclick = async () => {
     const body = {}; app.querySelectorAll("[data-key]").forEach(i => { if (i.value.trim()) body[i.dataset.key] = i.value.trim(); });
     await api("/api/env", { method: "POST", body: JSON.stringify(body) }); toast("Đã lưu"); viewSettings();

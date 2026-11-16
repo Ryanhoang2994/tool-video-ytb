@@ -180,9 +180,10 @@ def check_audio(project: Project) -> list[str]:
 
 
 def check_spelling(script, cfg) -> list[str]:
-    if not os.getenv("ANTHROPIC_API_KEY"):
-        return [f"{NA} Chính tả/ngữ pháp: cần ANTHROPIC_API_KEY để Claude rà soát"]
-    from .scriptgen import ClaudeWriter
+    from .scriptgen import get_writer, llm_backend
+
+    if llm_backend(cfg) == "none":
+        return [f"{NA} Chính tả/ngữ pháp: cần Claude Code (gói Claude) hoặc ANTHROPIC_API_KEY để Claude rà soát"]
 
     schema = {"type": "object", "properties": {"issues": {"type": "array", "items": {
         "type": "object", "properties": {"scene_id": {"type": "string"}, "text": {"type": "string"},
@@ -190,7 +191,7 @@ def check_spelling(script, cfg) -> list[str]:
         "required": ["scene_id", "text", "suggestion"], "additionalProperties": False}}},
         "required": ["issues"], "additionalProperties": False}
     body = "\n".join(f"[{s['id']}] {s['narration']}" for s in _scenes(script))
-    res = ClaudeWriter(cfg).ask_json("Bạn là biên tập viên. Chỉ ra lỗi chính tả, ngữ pháp, câu khó đọc thành tiếng.",
+    res = get_writer(cfg).ask_json("Bạn là biên tập viên. Chỉ ra lỗi chính tả, ngữ pháp, câu khó đọc thành tiếng.",
                                      f"Rà soát lời dẫn sau, chỉ liệt kê lỗi thật sự:\n{body}", schema)
     return [f"{WARN} {x['scene_id']}: «{x['text']}» -> {x['suggestion']}" for x in res["issues"]] or [f"{OK} Không thấy lỗi"]
 
