@@ -79,7 +79,7 @@ def _status(d: Path) -> dict:
     fin = d / "output" / "final.mp4"
     return {
         "research": (d / "research.json").exists(),
-        "script": bool(script),
+        "script": bool(ids),  # có ít nhất 1 cảnh mới tính là xong
         "voice": bool(ids) and all(i in timing for i in ids),
         "media": bool(ids) and all(i in plan for i in ids),
         "render": fin.exists(),
@@ -338,11 +338,31 @@ def api_run(slug):
         else:
             abort(400, "Chưa có Claude Code hay API key - xem trang 'Claude / API key', hoặc dùng khung 'Viết kịch bản bằng claude.ai' bên dưới")
     cmds = []
+    opts = dict(b.get("options") or {})
+    if "script" in steps and ((PROJECTS / slug / "script.json").exists() or (PROJECTS / slug / "outline.json").exists()):
+        opts["restart"] = True  # "Làm lại" kịch bản: bỏ dàn ý / chương cũ, viết lại từ đầu
     for st in steps:
         if st not in STEP_CMDS:
             abort(400, f"bước lạ: {st}")
-        cmds += STEP_CMDS[st](slug, b.get("options") or {})
+        cmds += STEP_CMDS[st](slug, opts)
     return jsonify(_start_job(slug, cmds, b.get("label") or ", ".join(steps)))
+
+
+@app.delete("/api/projects/<slug>")
+def api_delete(slug):
+    """Xoá hẳn 1 dự án (thư mục projects/<slug>)."""
+    import shutil
+
+    slug = _safe_slug(slug)
+    job = JOBS.get(slug)
+    if job and job["running"]:
+        abort(409, "Dự án đang chạy - bấm Dừng trước")
+    d = (PROJECTS / slug).resolve()
+    if not d.is_relative_to(PROJECTS.resolve()) or d == PROJECTS.resolve() or not d.is_dir():
+        abort(404)
+    shutil.rmtree(d, ignore_errors=True)
+    JOBS.pop(slug, None)
+    return jsonify({"ok": True})
 
 
 @app.post("/api/projects/<slug>/stop")

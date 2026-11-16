@@ -457,9 +457,15 @@ def write_script_auto(project: Project, cfg: dict) -> dict:
         raise SystemExit("Chưa có research.json - chạy lệnh research trước.")
     w = get_writer(cfg)
     outline = project.read_json("outline.json")
-    if not outline:
-        log(f"Claude ({w.model}) đang lập dàn ý...")
+    if not outline or not outline.get("chapters"):  # dàn ý rỗng lần trước -> lập lại
+        log(f"Claude ({getattr(w, 'model', '') or 'Claude Code'}) đang lập dàn ý...")
         outline = w.ask_json(system_prompt(cfg), build_outline_prompt(research, cfg), OUTLINE_SCHEMA)
+        if not outline.get("chapters"):
+            why = " ".join(x for x in (outline.get("title"), outline.get("hook"), outline.get("description")) if x)
+            raise SystemExit(
+                "Claude không lập được dàn ý cho chủ đề này" + (f": {why[:400]}" if why else ".") +
+                "\n-> Thường do chủ đề quá chung chung hoặc tư liệu tìm được không khớp. Hãy nhập chủ đề CỤ THỂ "
+                "(tên vụ việc / nhân vật, năm, địa điểm), thêm từ khoá tiếng Anh hoặc link tư liệu, rồi tạo lại.")
         project.write_json("outline.json", outline)
     log(f"Dàn ý: {outline['title']} - {len(outline['chapters'])} chương")
 
@@ -468,6 +474,9 @@ def write_script_auto(project: Project, cfg: dict) -> dict:
     for i in range(len(chapters), len(outline["chapters"])):
         log(f"Viết chương {i + 1}/{len(outline['chapters'])}: {outline['chapters'][i]['title']}")
         res = w.ask_json(system_prompt(cfg), build_chapter_prompt(research, outline, i, cfg, prev_tail), SCENE_SCHEMA)
+        if not res.get("scenes"):
+            raise SystemExit(f"Claude không viết được cảnh nào cho chương {i + 1}. Chạy lại bước Kịch bản "
+                             "(tool sẽ viết tiếp từ chương này).")
         chapters.append({"title": outline["chapters"][i]["title"], "scenes": res["scenes"]})
         project.write_json("chapters_partial.json", chapters)  # lưu dần, lỗi giữa chừng chạy lại sẽ tiếp tục
         prev_tail = res["scenes"][-1]["narration"]

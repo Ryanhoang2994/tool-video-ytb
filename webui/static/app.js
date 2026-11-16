@@ -112,6 +112,7 @@ async function viewNew() {
     </div>
     <label>Chủ đề / câu hỏi của video *</label>
     <input type="text" id="topic" placeholder="vd: Vụ không tặc D. B. Cooper  ·  Vì sao có người rất khó mở lời nhờ giúp đỡ?">
+    <div class="sub" style="margin:6px 0 0;font-size:12px">Nhập chủ đề <b>cụ thể</b> (tên vụ việc / nhân vật, năm, địa điểm). Chủ đề chung chung như "vụ án thảm sát" thì Claude không biết viết về vụ nào.</div>
     <div class="cols">
       <div><label>Thời lượng (phút)</label><input type="number" id="minutes" min="1" max="60" value="10"></div>
       <div><label>Ngôn ngữ</label><select id="language"><option value="vi">Tiếng Việt</option><option value="en">English</option></select></div>
@@ -180,7 +181,8 @@ async function viewProject(slug) {
       <div class="sub" style="margin-bottom:8px"><span class="pill">${esc(PRESET_NAME[P.preset] || P.preset)}</span>
       ${P.scenes ? `<span class="pill">${P.scenes} cảnh</span>` : ""}${P.duration ? `<span class="pill">${fmtDur(P.duration)}</span>` : ""}
       <span class="pill">${esc(P.slug)}</span></div></div>
-      <button class="btn primary" id="all">▶ Chạy các bước còn thiếu</button><button class="btn" id="stop">■ Dừng</button></div>
+      <button class="btn primary" id="all">▶ Chạy các bước còn thiếu</button><button class="btn" id="stop">■ Dừng</button>
+      <button class="btn" id="del" title="Xoá hẳn dự án này">🗑 Xoá</button></div>
     <div class="pipeline">${STEPS.map(([k, name, hint], i) => `
       <div class="stepbox ${st[k] ? "done" : ""}" title="${esc(hint)}"><div class="h"><span>${i + 1}. ${name}</span><span class="st">${st[k] ? "✓" : "○"}</span></div>
       ${k === "voice" ? `<select id="o_backend"><option value="">VieNeu (mặc định)</option><option value="google">Google</option><option value="elevenlabs">ElevenLabs</option><option value="edge">Edge</option></select>` : ""}
@@ -199,6 +201,11 @@ async function viewProject(slug) {
   });
   drawManual(!st.script);
   $("#all").onclick = () => run(["all"], opts(), "Chạy các bước còn thiếu");
+  $("#del").onclick = async () => {
+    if (!confirm(`Xoá hẳn dự án "${P.title}"? (xoá cả giọng đọc, hình, video đã làm – không lấy lại được)`)) return;
+    try { await api(`/api/projects/${slug}`, { method: "DELETE" }); toast("Đã xoá"); location.hash = "#/"; }
+    catch (e) { toast(e.message, 5000); }
+  };
   $("#stop").onclick = async () => { await api(`/api/projects/${slug}/stop`, { method: "POST" }); toast("Đã gửi lệnh dừng"); };
   app.querySelectorAll("[data-tab]").forEach(b => b.onclick = () => { tab = b.dataset.tab; app.querySelectorAll("[data-tab]").forEach(x => x.classList.toggle("on", x === b)); drawTab(); });
   drawTab();

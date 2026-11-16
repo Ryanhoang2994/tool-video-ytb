@@ -420,6 +420,8 @@ def make_voice(project: Project, cfg: dict, redo: set[str] | None = None) -> dic
     cast = {k.strip().upper(): v for k, v in (cfg["voice"].get("cast") or {}).items() if v}
     timing = project.read_json("timing.json", {})
     scenes = [s for c in script["chapters"] for s in c["scenes"]]
+    if not scenes:
+        raise SystemExit("Kịch bản chưa có cảnh nào - chạy lại bước Kịch bản (chủ đề nên cụ thể hơn).")
     for i, s in enumerate(scenes, 1):
         out = project.path("audio", f"{s['id']}.wav")
         if s.get("locked") and out.exists() and s["id"] in timing:  # cảnh đã khoá: giữ giọng đã chọn
