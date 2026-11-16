@@ -58,15 +58,17 @@ class EdgeTTS:
 
         import time
 
-        for i in range(6):
+        tries = 10  # dịch vụ Edge thỉnh thoảng không trả âm thanh (NoAudioReceived) -> chờ lâu dần rồi thử lại
+        for i in range(tries):
             try:
                 asyncio.run(go())
                 break
             except Exception as e:  # noqa: BLE001
-                if i == 5:
+                if i == tries - 1:
                     raise
-                log(f"  edge-tts thử lại ({type(e).__name__})")
-                time.sleep(3 * (i + 1))
+                wait = min(45, 4 * (i + 1))
+                log(f"  edge-tts thử lại sau {wait}s ({type(e).__name__})")
+                time.sleep(wait)
         _norm(tmp, out)
         tmp.unlink(missing_ok=True)
 
