@@ -10,6 +10,7 @@ import hashlib
 import html
 import json
 import math
+import time
 import os
 import random
 import re
@@ -394,6 +395,7 @@ def collect_media(project: Project, cfg: dict, only: set[str] | None = None, can
         used |= {m.get("lib_id") or m["file"] for v in plan.values() for m in v}
     scenes = [s for c in script["chapters"] for s in c["scenes"]]
     ai_ids: set[str] = set()
+    searched: set[tuple[str, str]] = set()
     for i, s in enumerate(scenes):
         if only and s["id"] not in only:
             continue
@@ -423,12 +425,17 @@ def collect_media(project: Project, cfg: dict, only: set[str] | None = None, can
         queries = _scene_queries(s, topic_terms)
         log(f"[{i + 1}/{len(scenes)}] {s['id']} {need} shot/{uniq_target} ảnh, {want_video} video: {queries[:3]}")
         picked: list[dict] = []
+        t_scene = time.time()
+        budget = float(mc.get("scene_fetch_seconds", 90))  # giới hạn thời gian tìm trên mạng cho 1 cảnh
 
         # 1) video b-roll (chỉ nhận video có tiêu đề/mô tả khớp từ khoá, tối đa 4 ứng viên/từ khoá để đỡ tốn thời gian)
         min_rel = mc.get("video_min_relevance", 0.34)
         for q in queries[::-1]:
-            if sum(p["kind"] == "video" for p in picked) >= want_video:
+            if sum(p["kind"] == "video" for p in picked) >= want_video or time.time() - t_scene > budget / 2:
                 break
+            if ("v", q) in searched:
+                continue
+            searched.add(("v", q))
             cands = [c for c in sources.search_videos(q, mc.get("video_sources", []))
                      if keyword_score(q, c["title"]) >= min_rel and c["url"] not in used
                      and era_ok_strict(f"{q} {era}", c["title"])]
@@ -447,7 +454,9 @@ def collect_media(project: Project, cfg: dict, only: set[str] | None = None, can
         for q in queries:
             for r in lib.local_search(q, 30, exclude=None):
                 pool[r["id"]] = r
-            if len([r for r in pool.values() if r["id"] not in used]) < max(uniq_target * 3, candidates):
+            if len([r for r in pool.values() if r["id"] not in used]) < max(uniq_target * 3, candidates) \
+                    and ("i", q) not in searched and time.time() - t_scene < budget:
+                searched.add(("i", q))  # từ khoá đã tìm thì lần sau chỉ dùng thư viện
                 for r in lib.fetch(q, list(dict.fromkeys(extra + img_srcs)), per_source=10,
                                    min_w=mc.get("min_width", 900)):
                     pool[r["id"]] = r

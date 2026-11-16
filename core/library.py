@@ -195,9 +195,11 @@ class Library:
             return {}
 
     # ---------- cào từ nguồn ----------
-    def fetch(self, query: str, srcs: list[str], per_source: int = 12, min_w: int = 800, workers: int = 3) -> list[dict]:
+    def fetch(self, query: str, srcs: list[str], per_source: int = 12, min_w: int = 800, workers: int = 3,
+              max_dl: int = 16) -> list[dict]:
         cands = sources.search_images(query, srcs, per_source, min_w)
         cands.sort(key=lambda c: -(keyword_score(query, c["title"]) + SRC_BONUS.get(_src_key(c["src"]), 0)))
+        cands = cands[:max_dl]  # chỉ tải những ảnh tiêu đề khớp nhất (trước đây tải hết -> rất chậm)
         with ThreadPoolExecutor(workers) as ex:
             recs = list(ex.map(lambda c: self.add(c, query, min_w), cands))
         self.save()

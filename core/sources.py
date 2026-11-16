@@ -403,17 +403,46 @@ IMAGE_SOURCES = {"wiki_article": wiki_article, "wikimedia": wikimedia, "loc": lo
 VIDEO_SOURCES = {"wikimedia_video": wikimedia_video, "loc_video": loc_video, "pexels_video": pexels_video, "pixabay_video": pixabay_video, "archive_video": archive_video}
 
 
+_DEAD: dict[str, float] = {}  # nguồn lỗi kết nối -> bỏ qua tới thời điểm này
+_FAILS: dict[str, int] = {}
+
+
+def _src_ok(name: str) -> bool:
+    import time
+
+    return _DEAD.get(name, 0) < time.time()
+
+
+def _src_fail(name: str, e: Exception) -> None:
+    """Lỗi kết nối / bị chặn: bỏ qua nguồn cả lượt chạy. Lỗi tạm (429, hết giờ): lặp lại 3 lần thì nghỉ 10 phút."""
+    import time
+
+    msg = str(e)
+    if any(k in msg for k in ("ProxyError", "Tunnel connection failed", "SSLError", "Name or service not known",
+                              "getaddrinfo failed", "403 Forbidden")):
+        _DEAD[name] = time.time() + 6 * 3600
+        log(f"  ! bỏ qua nguồn {name} (không kết nối được)")
+        return
+    _FAILS[name] = _FAILS.get(name, 0) + 1
+    log(f"  ! {name}: {msg.splitlines()[0][:120]}")
+    if _FAILS[name] >= 3:
+        _DEAD[name] = time.time() + 600
+        _FAILS[name] = 0
+        log(f"  ! tạm nghỉ nguồn {name} 10 phút (lỗi liên tục)")
+
+
 def search_images(q: str, sources: list[str], n: int = 15, min_w: int = 900) -> list[dict]:
     out = []
     for name in sources:
         fn = IMAGE_SOURCES.get(name)
-        if not fn:
+        if not fn or not _src_ok(name):
             continue
         try:
             got = fn(q, n, min_w)
             out += got
+            _FAILS.pop(name, None)
         except Exception as e:  # noqa: BLE001
-            log(f"  ! {name}: {str(e).splitlines()[0][:120]}")
+            _src_fail(name, e)
     return out
 
 
@@ -421,10 +450,11 @@ def search_videos(q: str, sources: list[str], n: int = 8) -> list[dict]:
     out = []
     for name in sources:
         fn = VIDEO_SOURCES.get(name)
-        if not fn:
+        if not fn or not _src_ok(name):
             continue
         try:
             out += fn(q, n)
+            _FAILS.pop(name, None)
         except Exception as e:  # noqa: BLE001
-            log(f"  ! {name}: {str(e).splitlines()[0][:120]}")
+            _src_fail(name, e)
     return out
