@@ -128,6 +128,11 @@ def _host(url: str) -> str:
 
 
 _host_timeout: dict[str, list[float]] = {}
+_host_dead: set[str] = set()  # host bị chặn (proxy/SSL) -> không thử lại trong lượt chạy này
+
+
+def host_ok(url: str) -> bool:
+    return _host(url) not in _host_dead
 
 
 def http_get(url: str, *, params=None, headers=None, timeout=30, retries=4, stream=False):
@@ -137,6 +142,8 @@ def http_get(url: str, *, params=None, headers=None, timeout=30, retries=4, stre
     if len([t for t in hits if time.time() - t < 120]) >= 6:  # host đang chặn tốc độ -> tạm bỏ qua 2 phút
         raise requests.HTTPError(f"429 (tạm bỏ qua {host})")
     allto = _host_timeout.get(host, [])
+    if host in _host_dead:
+        raise requests.exceptions.ProxyError(f"{host} bị chặn (bỏ qua)")
     tos = [t for t in allto if time.time() - t < 600]
     if len(tos) >= 2 or len(allto) >= 5:  # không trả lời 2 lần/10 phút -> nghỉ 10 phút; lặp lại nhiều lần -> bỏ hẳn
         raise requests.exceptions.ConnectTimeout(f"{host} không phản hồi (tạm bỏ qua)")
@@ -155,6 +162,7 @@ def http_get(url: str, *, params=None, headers=None, timeout=30, retries=4, stre
             r.raise_for_status()
             return r
         except (requests.exceptions.ProxyError, requests.exceptions.SSLError) as e:
+            _host_dead.add(host)
             raise e  # host bị chặn / lỗi chứng chỉ: không thử lại
         except requests.HTTPError as e:
             if e.response is not None and 400 <= e.response.status_code < 500:

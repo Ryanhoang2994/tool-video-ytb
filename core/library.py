@@ -199,7 +199,9 @@ class Library:
               max_dl: int = 16) -> list[dict]:
         cands = sources.search_images(query, srcs, per_source, min_w)
         cands.sort(key=lambda c: -(keyword_score(query, c["title"]) + SRC_BONUS.get(_src_key(c["src"]), 0)))
-        cands = cands[:max_dl]  # chỉ tải những ảnh tiêu đề khớp nhất (trước đây tải hết -> rất chậm)
+        from .util import host_ok
+
+        cands = [c for c in cands if host_ok(c.get("url", ""))][:max_dl]  # chỉ tải ảnh khớp nhất, bỏ host bị chặn
         with ThreadPoolExecutor(workers) as ex:
             recs = list(ex.map(lambda c: self.add(c, query, min_w), cands))
         self.save()
