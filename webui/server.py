@@ -348,6 +348,23 @@ def api_run(slug):
     return jsonify(_start_job(slug, cmds, b.get("label") or ", ".join(steps)))
 
 
+@app.post("/api/projects/<slug>/translate")
+def api_translate(slug):
+    """Tạo bản ngôn ngữ khác (mặc định tiếng Anh): dịch kịch bản, dùng lại hình, đọc + dựng. Chạy ở dự án mới."""
+    slug = _safe_slug(slug)
+    b = request.get_json(force=True) or {}
+    lang = b.get("to", "en") if b.get("to") in ("en", "vi") else "en"
+    if not _status(PROJECTS / slug)["script"]:
+        abort(400, "Bản gốc chưa có kịch bản")
+    if not _has_claude():
+        abort(400, "Cần Claude Code (gói Claude) hoặc API key để dịch - xem trang Claude / API key")
+    dst = f"{slug}-{lang}"
+    (PROJECTS / dst).mkdir(parents=True, exist_ok=True)
+    cmd = ["translate", slug, "--to", lang] + (["--all"] if b.get("run_all", True) else [])
+    _start_job(dst, [cmd], f"Tạo bản {'tiếng Anh' if lang == 'en' else 'tiếng Việt'}")
+    return jsonify({"slug": dst})
+
+
 @app.delete("/api/projects/<slug>")
 def api_delete(slug):
     """Xoá hẳn 1 dự án (thư mục projects/<slug>)."""

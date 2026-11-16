@@ -381,6 +381,13 @@ def get_engine(cfg: dict):
     vc = cfg["voice"]
     POLISH["on"] = vc.get("polish", True)
     b = vc.get("backend", "edge")
+    if cfg["channel"].get("language") == "en":  # video tiếng Anh: VieNeu / giọng edge tiếng Việt không đọc được
+        if b == "vieneu":
+            b = vc.get("en_backend", "edge")
+            log(f"  Video tiếng Anh -> dùng giọng {b}")
+        if b == "edge" and str(vc.get("edge_voice", "")).startswith("vi-"):
+            vc = {**vc, "edge_voice": vc.get("en_edge_voice", "en-US-AndrewNeural"),
+                  "edge_rate": vc.get("en_edge_rate", vc.get("edge_rate", "-4%"))}
     if b == "edge":
         return EdgeTTS(vc)
     if b == "vieneu":

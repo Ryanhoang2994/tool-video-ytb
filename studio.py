@@ -274,6 +274,19 @@ def cmd_all(a, cfg):
     log(f"XONG. Xem thư mục {p.path('output')}")
 
 
+def cmd_translate(a, cfg):
+    import subprocess
+
+    from core.translate import translate_project
+
+    dst = translate_project(a.slug, a.to, cfg)
+    if a.all:
+        for step in ("voice", "render", "check"):
+            r = subprocess.run([sys.executable, str(ROOT / "studio.py"), step, dst.slug], cwd=ROOT)
+            if r.returncode:
+                raise SystemExit(r.returncode)
+
+
 def cmd_ui(a, cfg):
     from webui.server import run
 
@@ -438,6 +451,12 @@ def main():
     s.add_argument("--drafts-dir")
     s.add_argument("--name")
     s.set_defaults(fn=cmd_capcut)
+
+    s = sub.add_parser("translate", help="tạo bản ngôn ngữ khác (dịch kịch bản, dùng lại hình) -> <slug>-<lang>")
+    s.add_argument("slug")
+    s.add_argument("--to", default="en", choices=["en", "vi"])
+    s.add_argument("--all", action="store_true", help="dịch xong chạy luôn giọng đọc + dựng video + kiểm tra")
+    s.set_defaults(fn=cmd_translate)
 
     s = sub.add_parser("ui", help="mở giao diện web trên máy (http://127.0.0.1:7860)")
     s.add_argument("--port", type=int, default=7860)

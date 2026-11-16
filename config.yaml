@@ -78,6 +78,8 @@ voice:
   elevenlabs_style: 0.15
   edge_voice: "vi-VN-NamMinhNeural"  # giọng nam trầm. Khác: en-GB-RyanNeural, en-US-AndrewNeural, en-US-GuyNeural, en-US-AvaNeural (nữ)
   edge_rate: "-4%"                # chậm lại một chút cho không khí trầm
+  en_backend: "edge"              # video tiếng Anh (bản dịch): giọng dùng thay VieNeu | edge | kokoro | elevenlabs | google
+  en_edge_voice: "en-US-AndrewNeural"   # giọng nam Mỹ trầm, tự nhiên. Khác: en-GB-RyanNeural, en-US-GuyNeural
   edge_pitch: "-4Hz"
   piper_model: "voices/en_US-ryan-high.onnx"   # vi: voices/vi_VN-vais1000-medium.onnx
   piper_length_scale: 1.1         # >1 = đọc chậm hơn

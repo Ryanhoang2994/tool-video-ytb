@@ -182,6 +182,7 @@ async function viewProject(slug) {
       ${P.scenes ? `<span class="pill">${P.scenes} cảnh</span>` : ""}${P.duration ? `<span class="pill">${fmtDur(P.duration)}</span>` : ""}
       <span class="pill">${esc(P.slug)}</span></div></div>
       <button class="btn primary" id="all">▶ Chạy các bước còn thiếu</button><button class="btn" id="stop">■ Dừng</button>
+      ${P.status.script && !P.meta?.translated_from ? `<button class="btn" id="tr" title="Dịch kịch bản sang tiếng Anh, dùng lại hình, đọc giọng tiếng Anh và dựng video riêng">🌐 Tạo bản tiếng Anh</button>` : ""}
       <button class="btn" id="del" title="Xoá hẳn dự án này">🗑 Xoá</button></div>
     <div class="pipeline">${STEPS.map(([k, name, hint], i) => `
       <div class="stepbox ${st[k] ? "done" : ""}" title="${esc(hint)}"><div class="h"><span>${i + 1}. ${name}</span><span class="st">${st[k] ? "✓" : "○"}</span></div>
@@ -201,6 +202,13 @@ async function viewProject(slug) {
   });
   drawManual(!st.script);
   $("#all").onclick = () => run(["all"], opts(), "Chạy các bước còn thiếu");
+  const trb = $("#tr");
+  if (trb) trb.onclick = async () => {
+    if (!confirm("Tạo bản tiếng Anh: dịch kịch bản, dùng lại hình của bản này, đọc giọng tiếng Anh và dựng video riêng?")) return;
+    try { const r = await api(`/api/projects/${slug}/translate`, { method: "POST", body: JSON.stringify({ to: "en", run_all: true }) });
+      toast("Đang tạo bản tiếng Anh…"); location.hash = "#/p/" + r.slug; }
+    catch (e) { toast(e.message, 6000); }
+  };
   $("#del").onclick = async () => {
     if (!confirm(`Xoá hẳn dự án "${P.title}"? (xoá cả giọng đọc, hình, video đã làm – không lấy lại được)`)) return;
     try { await api(`/api/projects/${slug}`, { method: "DELETE" }); toast("Đã xoá"); location.hash = "#/"; }
