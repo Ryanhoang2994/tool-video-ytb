@@ -123,7 +123,9 @@ async function viewNew() {
       <label>Kịch bản có sẵn (tuỳ chọn) – dán văn bản, hoặc JSON theo mẫu trong thư mục <code>examples/</code>. Có kịch bản thì bỏ qua bước tìm tư liệu + Claude viết.</label>
       <textarea id="own" rows="6" placeholder="# Chương 1&#10;Đoạn lời đọc..."></textarea>
     </details>
-    ${hasClaude ? "" : `<div class="warn">Chưa có <b>ANTHROPIC_API_KEY</b> nên Claude chưa tự viết kịch bản được. Thêm key ở trang <a href="#/settings">API key</a>, hoặc dán kịch bản có sẵn ở mục trên.</div>`}
+    ${hasClaude ? "" : `<div class="warn"><b>Không có API key cũng làm được.</b> Tool vẫn tự tìm tư liệu, sau đó đưa bạn một <b>lời nhắc</b> để dán vào
+      <a href="https://claude.ai" target="_blank" rel="noopener">claude.ai</a> (dùng gói Claude bạn đang có). Dán kết quả trả về vào ô trên trang dự án là tool chạy tiếp
+      giọng đọc → hình → dựng video. Muốn tự động hoàn toàn thì thêm <b>ANTHROPIC_API_KEY</b> ở trang <a href="#/settings">API key</a>.</div>`}
     <div class="cols" style="margin-top:6px">
       <div><label>Giọng đọc</label><select id="backend"><option value="">Theo cấu hình (VieNeu – miễn phí)</option><option value="vieneu">VieNeu (máy bạn)</option>
         <option value="google">Google Chirp 3 HD</option><option value="elevenlabs">ElevenLabs</option><option value="edge">Edge TTS</option></select></div>
@@ -184,18 +186,54 @@ async function viewProject(slug) {
       ${k === "render" ? `<select id="o_look"><option value="">Kiểu theo preset</option><option value="collage">Cắt dán</option><option value="dark">Tối</option><option value="noir_red">Tối đỏ</option><option value="vintage">Phim cũ</option><option value="deep_blue">Đại dương</option><option value="bright">Sáng</option></select>
         <label style="display:flex;gap:6px;margin:0 0 6px;align-items:center"><input type="checkbox" id="o_preview"> chỉ xem thử</label>` : ""}
       <button class="btn small" data-step="${k}">${st[k] ? "Làm lại" : "Chạy"}</button></div>`).join("")}</div>
+    <div id="manual"></div>
     <h2>Nhật ký <span class="sub" id="jobl" style="font-size:12px"></span></h2><div class="log" id="log"></div>
     <div class="tabs">${[["video", "Video"], ["sb", "Storyboard & sửa cảnh"], ["report", "Báo cáo kiểm tra"], ["yt", "Đăng YouTube"], ["files", "Tệp xuất"]]
       .map(([k, n]) => `<button data-tab="${k}" class="${tab === k ? "on" : ""}">${n}</button>`).join("")}</div>
     <div id="tab"></div>`;
   const opts = () => ({ backend: $("#o_backend").value, look: $("#o_look").value, preview: $("#o_preview").checked });
-  app.querySelectorAll("[data-step]").forEach(b => b.onclick = () => run([b.dataset.step], opts()));
+  app.querySelectorAll("[data-step]").forEach(b => b.onclick = () => {
+    if (b.dataset.step === "script" && !P.has_claude_key) { drawManual(true); return; }
+    run([b.dataset.step], opts());
+  });
+  drawManual(!st.script);
   $("#all").onclick = () => run(["all"], opts(), "Chạy các bước còn thiếu");
   $("#stop").onclick = async () => { await api(`/api/projects/${slug}/stop`, { method: "POST" }); toast("Đã gửi lệnh dừng"); };
   app.querySelectorAll("[data-tab]").forEach(b => b.onclick = () => { tab = b.dataset.tab; app.querySelectorAll("[data-tab]").forEach(x => x.classList.toggle("on", x === b)); drawTab(); });
   drawTab();
   logOffset = 0; $("#log").textContent = "";
   await pullLog(true);
+}
+function drawManual(show) {
+  const m = $("#manual"); if (!m) return;
+  if (!show) { m.innerHTML = ""; return; }
+  const hasRes = P.status.research;
+  m.innerHTML = `<div class="panel" style="border-color:var(--accent2);margin-top:16px">
+    <h2 style="margin-top:0">✍ Viết kịch bản bằng claude.ai <span class="sub" style="font-size:12px">– không cần API key</span></h2>
+    ${hasRes ? "" : `<div class="warn">Đang chờ bước 1 (Tư liệu) chạy xong – xem nhật ký bên dưới. Xong là dùng được khung này.</div>`}
+    <div style="line-height:1.8"><b>1.</b> <button class="btn small" id="cpPrompt" ${hasRes ? "" : "disabled"}>📋 Sao chép lời nhắc</button>
+      <b>2.</b> Mở <a href="https://claude.ai/new" target="_blank" rel="noopener">claude.ai</a>, dán lời nhắc và gửi (dài thì nói "tiếp" để Claude viết nốt các chương).
+      <b>3.</b> Sao chép toàn bộ câu trả lời (có thể nhiều lần trả lời, dán nối tiếp nhau) vào ô dưới.</div>
+    <textarea id="pasted" rows="7" placeholder='Dán câu trả lời của Claude vào đây (có thể chứa cả chữ và khối json { "title": ..., "chapters": [...] })'></textarea>
+    <div class="row" style="margin-top:10px"><button class="btn primary" id="imp">Nhập kịch bản</button>
+      <label style="display:flex;gap:6px;margin:0;align-items:center;color:var(--text)"><input type="checkbox" id="impAll" checked> rồi chạy tiếp: giọng đọc → hình → dựng video → kiểm tra</label></div>
+    <details style="margin-top:8px"><summary style="cursor:pointer;color:var(--info);font-size:12px">Xem lời nhắc</summary><pre class="yt" id="promptView" style="max-height:260px;overflow:auto"></pre></details></div>`;
+  let cache = "";
+  const getPrompt = async () => { if (!cache) cache = (await api(`/api/projects/${P.slug}/prompt`)).prompt; return cache; };
+  $("#cpPrompt").onclick = async () => {
+    try { const t = await getPrompt(); $("#promptView").textContent = t;
+      try { await navigator.clipboard.writeText(t); toast("Đã sao chép lời nhắc – dán vào claude.ai"); }
+      catch (e) { toast("Trình duyệt chặn sao chép – mở mục 'Xem lời nhắc' và tự bôi đen sao chép", 6000); }
+    } catch (e) { toast(e.message, 6000); }
+  };
+  m.querySelector("details").ontoggle = async e => { if (e.target.open && hasRes) { try { $("#promptView").textContent = await getPrompt(); } catch (x) { $("#promptView").textContent = x.message; } } };
+  $("#imp").onclick = async () => {
+    const text = $("#pasted").value.trim(); if (!text) return toast("Dán câu trả lời của Claude vào ô trước");
+    try {
+      const r = await api(`/api/projects/${P.slug}/script-json`, { method: "POST", body: JSON.stringify({ text, run_all: $("#impAll").checked }) });
+      toast(`Đã nhận ${r.chapters} chương, ${r.scenes} cảnh – đang chạy tiếp`); logOffset = 0; $("#log").textContent = ""; pullLog(true);
+    } catch (e) { toast(e.message, 7000); }
+  };
 }
 async function run(steps, options, label) {
   try { await api(`/api/projects/${P.slug}/run`, { method: "POST", body: JSON.stringify({ steps, options, label }) }); toast("Đã bắt đầu: " + (label || steps.join(", "))); logOffset = 0; $("#log").textContent = ""; pullLog(true); }

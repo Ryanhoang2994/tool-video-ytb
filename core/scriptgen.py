@@ -489,29 +489,84 @@ def save_script(project: Project, script: dict) -> None:
 
 # --------- Chế độ manual (không có API key) ---------
 
-def write_manual_prompt(project: Project, cfg: dict) -> Path:
+MANUAL_SCENE_EXAMPLE = {
+    "narration": "lời đọc của cảnh, 25-70 từ, viết số bằng chữ", "purpose": "hook", "on_screen_text": "",
+    "visual_type": "archival_photo", "action": "", "camera": "auto", "sound": "none",
+    "entity": {"name": "", "role": "", "search_query_en": ""},
+    "character": {"expression": "", "pose": "", "position": "left", "thought": "", "outside": "", "inside": "",
+                  "keywords": [], "framing": "auto", "shadow": ""},
+    "figures": [], "diagram": {"type": "none", "subject": "", "size_m": 0, "depth_m": 0},
+    "stat": {"value": 0, "label": "", "unit": ""}, "fx": "auto", "emphasis": [], "mood": "auto", "music": "",
+    "hud": "", "pause_after": 0,
+    "insert": {"type": "none", "time": "", "date": "", "app": "", "text": "", "messages": []},
+    "sources": [], "search_queries_en": ["english search words"], "image_prompt_en": "english image description"}
+
+
+def manual_prompt_text(project: Project, cfg: dict) -> str:
+    """Lời nhắc đầy đủ để dán vào claude.ai (không cần API key)."""
     research = project.read_json("research.json")
     if not research:
-        raise SystemExit("Chưa có research.json - chạy lệnh research trước.")
-    sc = cfg["script"]
+        raise SystemExit("Chưa có research.json - chạy bước Tư liệu trước.")
     ch = cfg["channel"]
     total_words = ch["target_minutes"] * ch["words_per_minute"]
-    prompt = system_prompt(cfg) + "\n" + build_outline_prompt(research, cfg) + f"""
+    example = json.dumps(MANUAL_SCENE_EXAMPLE, ensure_ascii=False)
+    return system_prompt(cfg) + "\n" + build_outline_prompt(research, cfg) + f"""
 
-SAU ĐÓ viết luôn toàn bộ lời dẫn (~{total_words} từ) và trả về MỘT khối JSON duy nhất theo cấu trúc:
-{{"title": "...", "youtube_titles": [...], "thumbnail_text": "...", "hook": "...", "description": "...",
-  "tags": [...], "sources_used": [...],
-  "title_line1": "VỤ ...", "title_line2": "TÊN VỤ ÁN",
-  "chapters": [{{"title": "...", "scenes": [{{"narration": "...", "on_screen_text": "", "visual_type": "archival_photo",
-       "entity": {{"name": "TÊN NHÂN VẬT hoặc rỗng", "role": "vai trò", "search_query_en": "tên tìm ảnh"}},
-       "search_queries_en": ["...", "...", "..."], "image_prompt_en": "..."}}]}}]}}
-Mỗi scene 40-80 từ. Nếu quá dài cho một lần trả lời, hãy trả từng chương, tôi sẽ ghép lại.
+{allowed_visuals(cfg)}
+{STORYBOARD_RULES}
+
+SAU ĐÓ viết luôn TOÀN BỘ kịch bản (~{total_words} từ lời đọc, {cfg["script"].get("chapters", 6)} chương) và trả về
+MỘT khối JSON duy nhất (không giải thích gì thêm) theo cấu trúc:
+{{"title": "...", "title_line1": "dòng nhỏ", "title_line2": "TIÊU ĐỀ LỚN", "youtube_titles": ["...", "..."],
+  "thumbnail_text": "...", "hook": "...", "description": "...", "tags": ["..."], "sources_used": ["..."],
+  "chapters": [{{"title": "...", "scenes": [ <scene>, <scene>, ... ]}}]}}
+Mỗi <scene> có đủ các trường như ví dụ:
+{example}
+Nếu quá dài cho một lần trả lời: trả JSON chương 1 trước (cùng cấu trúc, chỉ chứa chương 1), tôi sẽ nói "tiếp"
+để bạn trả các chương sau dạng {{"title": "...", "scenes": [...]}}; tôi tự ghép lại.
 """
+
+
+def write_manual_prompt(project: Project, cfg: dict) -> Path:
+    prompt = manual_prompt_text(project, cfg)
     p = project.path("prompt_for_claude.txt")
     p.write_text(prompt, encoding="utf-8")
     log(f"✓ Đã xuất prompt -> {p}\n  Dán vào claude.ai, lưu JSON trả về thành {project.path('script.json')}"
-        f"\n  rồi chạy: python studio.py script {project.slug} --import-json {project.path('script.json')}")
+        f"\n  rồi chạy: python studio.py script {project.slug} --import-json <file.json>")
     return p
+
+
+def parse_pasted_json(text: str) -> dict:
+    """Ghép JSON dán từ claude.ai: chấp nhận ```json``` , nhiều khối (chương 1, rồi các chương sau)."""
+    text = re.sub(r"```(?:json)?", "", text)
+    dec = json.JSONDecoder()
+    objs, i = [], 0
+    while True:
+        k = text.find("{", i)
+        if k < 0:
+            break
+        try:
+            o, end = dec.raw_decode(text, k)
+        except ValueError:
+            i = k + 1
+            continue
+        objs.append(o)
+        i = end
+    base = None
+    for o in objs:
+        if not isinstance(o, dict):
+            continue
+        if "chapters" in o:
+            if base is None:
+                base = o
+            else:
+                base["chapters"] += o["chapters"]
+        elif "scenes" in o and base is not None:
+            base["chapters"].append(o)
+    if not base or not base.get("chapters"):
+        raise ValueError("Không thấy JSON kịch bản (cần có \"chapters\") trong nội dung đã dán")
+    base.setdefault("title", base["chapters"][0].get("title", "Video"))
+    return base
 
 
 def import_json(project: Project, path: str) -> dict:

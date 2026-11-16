@@ -264,7 +264,14 @@ def api_create():
             nf.write_text(b["notes"], "utf-8")
             new += ["--notes", str(nf)]
         cmds.append(new)
-        cmds.append(["script", slug])
+        if _has_claude():
+            cmds.append(["script", slug])
+        else:  # không có API key: xuất lời nhắc để dán vào claude.ai, chờ người dùng dán kết quả
+            cmds.append(["script", slug, "--manual"])
+            meta = _read(d / "project.json", {})
+            meta["ui_after_script"] = (b.get("options") or {}) if b.get("run_all") else None
+            (d / "project.json").write_text(json.dumps(meta, ensure_ascii=False, indent=1), "utf-8")
+            b["run_all"] = False
     if b.get("run_all"):
         o = b.get("options") or {}
         for st in ("voice", "media", "render", "check"):
@@ -309,7 +316,7 @@ def api_project(slug):
             out[name] = {"label": label, "url": f"/files/{slug}/{name}"}
     rep = (d / "output" / "check_report.md")
     yt = (d / "output" / "youtube_upload.txt")
-    return jsonify({**s, "meta": _read(d / "project.json", {}), "script_meta": {
+    return jsonify({**s, "has_claude_key": _has_claude(), "meta": _read(d / "project.json", {}), "script_meta": {
         k: v for k, v in script.items() if k != "chapters"}, "chapters": chapters, "outputs": out,
         "report": rep.read_text("utf-8") if rep.exists() else "",
         "youtube": yt.read_text("utf-8") if yt.exists() else ""})
@@ -325,6 +332,11 @@ def api_run(slug):
         steps = [x for x in ORDER if x != "research" or not st["research"]]
         if st["script"]:
             steps = [x for x in steps if x != "script"]
+    if "script" in steps and not _has_claude():  # không key: chỉ làm tới bước tư liệu, kịch bản dán từ claude.ai
+        if steps != ["script"] and not _status(PROJECTS / slug)["research"]:
+            steps = ["research"]
+        else:
+            abort(400, "Chưa có ANTHROPIC_API_KEY - dùng khung 'Viết kịch bản bằng claude.ai' ngay bên dưới")
     cmds = []
     for st in steps:
         if st not in STEP_CMDS:
@@ -427,6 +439,55 @@ def api_scene_rebuild(slug, sid):
         cmds.append(["media", slug, "--only", sid])
     cmds.append(["render", slug])
     return jsonify(_start_job(slug, cmds, f"Dựng lại cảnh {sid}"))
+
+
+@app.get("/api/projects/<slug>/prompt")
+def api_prompt(slug):
+    """Lời nhắc viết kịch bản để dán vào claude.ai (không cần API key)."""
+    slug = _safe_slug(slug)
+    d = PROJECTS / slug
+    if not (d / "research.json").exists():
+        abort(400, "Chưa có tư liệu - chạy bước 1 (Tư liệu) trước")
+    r = subprocess.run([sys.executable, str(ROOT / "studio.py"), "script", slug, "--manual"], cwd=ROOT,
+                       capture_output=True, text=True, encoding="utf-8", errors="replace",
+                       env={**os.environ, "PYTHONIOENCODING": "utf-8"})
+    f = d / "prompt_for_claude.txt"
+    if r.returncode != 0 or not f.exists():
+        abort(500, (r.stdout + r.stderr)[-500:])
+    return jsonify({"prompt": f.read_text("utf-8")})
+
+
+@app.post("/api/projects/<slug>/script-json")
+def api_script_json(slug):
+    """Nhập kịch bản JSON dán từ claude.ai rồi (tuỳ chọn) chạy tiếp các bước."""
+    from core.scriptgen import parse_pasted_json
+
+    slug = _safe_slug(slug)
+    d = PROJECTS / slug
+    b = request.get_json(force=True) or {}
+    try:
+        data = parse_pasted_json(b.get("text") or "")
+    except ValueError as e:
+        abort(400, str(e))
+    n = sum(len(c.get("scenes") or []) for c in data["chapters"])
+    if not n:
+        abort(400, "JSON không có cảnh nào (scenes rỗng)")
+    f = d / "_ui_script.json"
+    f.write_text(json.dumps(data, ensure_ascii=False, indent=1), "utf-8")
+    if not (d / "research.json").exists():
+        (d / "research.json").write_text(json.dumps({"topic": data.get("title", slug), "en_query": "", "years": "",
+                                                     "sources": []}, ensure_ascii=False), "utf-8")
+    cmds = [["script", slug, "--import-json", str(f)]]
+    if b.get("run_all"):
+        o = b.get("options") or (_read(d / "project.json", {}) or {}).get("ui_after_script") or {}
+        for st in ("voice", "media", "render", "check"):
+            cmds += STEP_CMDS[st](slug, o)
+    job = _start_job(slug, cmds, f"Nhập kịch bản ({len(data['chapters'])} chương, {n} cảnh)")
+    return jsonify({"chapters": len(data["chapters"]), "scenes": n, "job": job})
+
+
+def _has_claude() -> bool:
+    return bool(os.environ.get("ANTHROPIC_API_KEY") or _env_values().get("ANTHROPIC_API_KEY"))
 
 
 @app.get("/api/env")
