@@ -127,12 +127,18 @@ def _host(url: str) -> str:
     return urlparse(url).hostname or ""
 
 
+_host_timeout: dict[str, list[float]] = {}
+
+
 def http_get(url: str, *, params=None, headers=None, timeout=30, retries=4, stream=False):
     last = None
     host = _host(url)
     hits = _host_429.get(host, [])
     if len([t for t in hits if time.time() - t < 120]) >= 6:  # host đang chặn tốc độ -> tạm bỏ qua 2 phút
         raise requests.HTTPError(f"429 (tạm bỏ qua {host})")
+    tos = [t for t in _host_timeout.get(host, []) if time.time() - t < 600]
+    if len(tos) >= 2:  # host không trả lời 2 lần trong 10 phút -> bỏ qua 10 phút thay vì chờ hết giờ mãi
+        raise requests.exceptions.ConnectTimeout(f"{host} không phản hồi (tạm bỏ qua 10 phút)")
     for i in range(retries):
         try:
             _throttle(url)
@@ -154,6 +160,11 @@ def http_get(url: str, *, params=None, headers=None, timeout=30, retries=4, stre
                 raise
             last = e
             time.sleep(1.5 * (i + 1))
+        except requests.exceptions.Timeout as e:  # hết giờ: thử lại tối đa 1 lần, ghi nhận để lần sau bỏ qua host
+            _host_timeout.setdefault(host, []).append(time.time())
+            last = e
+            if i >= 1:
+                break
         except requests.RequestException as e:
             last = e
             time.sleep(1.5 * (i + 1))
