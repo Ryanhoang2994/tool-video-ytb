@@ -473,8 +473,10 @@ def render_item(item: dict, out: Path, cfg: dict, plates: Path, labels: Path) ->
         over(f"[{li}:v]format=rgba,tpad=stop_mode=clone:stop_duration={max(0.1, hold_end - nfr / fps):.2f},"
              f"fade=t=out:st={max(0.2, hold_end - 0.5):.2f}:d=0.5:alpha=1,setpts=PTS+{label_delay:.2f}/TB",
              "overlay=0:0:eof_action=pass")
+    tmp = out.with_name(out.stem + ".part.mp4")  # ghi file tạm, xong mới đổi tên -> bị ngắt giữa chừng không để lại file hỏng
     run(["ffmpeg", "-y", *inputs, "-filter_complex", ";".join(chains), "-map", f"[{final}]",
-         "-frames:v", str(total), *_enc(cfg), str(out)])
+         "-frames:v", str(total), *_enc(cfg), str(tmp)])
+    os.replace(tmp, out)
     return out
 
 
@@ -548,7 +550,15 @@ def render_video(project: Project, cfg: dict, workers: int = 0, preview: bool = 
     if preview:
         jobs = jobs[:6]
 
-    todo = [j for j in jobs if not j[1].exists()]
+    def _ok(f: Path) -> bool:  # đoạn đã dựng còn đọc được (không bị cắt ngang khi tắt máy / mất điện)
+        if not f.exists() or f.stat().st_size < 1024:
+            return False
+        try:
+            return ffprobe_duration(f) > 0
+        except Exception:  # noqa: BLE001
+            return False
+
+    todo = [j for j in jobs if not _ok(j[1])]
     log(f"Render {len(todo)}/{len(jobs)} đoạn (đã cache {len(jobs) - len(todo)})...")
     workers = workers or max(1, (os.cpu_count() or 2) // 2)
     done = 0
