@@ -18,7 +18,8 @@ LANG = {"en": "English", "vi": "tiếng Việt"}
 FIELDS = {"narration": ("narration",), "on_screen_text": ("on_screen_text",), "purpose": ("purpose",),
           "hud": ("hud",), "thought": ("character", "thought"), "shadow": ("character", "shadow"),
           "outside": ("character", "outside"), "inside": ("character", "inside"), "stat_label": ("stat", "label"),
-          "insert_text": ("insert", "text"), "insert_date": ("insert", "date"), "entity_role": ("entity", "role")}
+          "insert_text": ("insert", "text"), "insert_date": ("insert", "date"), "entity_role": ("entity", "role"),
+          "entity_name": ("entity", "name")}
 
 TR_SCHEMA = {
     "type": "object",
@@ -35,12 +36,13 @@ TR_SCHEMA = {
                     "outside": {"type": "string"}, "inside": {"type": "string"},
                     "stat_label": {"type": "string"}, "insert_text": {"type": "string"},
                     "insert_date": {"type": "string"}, "entity_role": {"type": "string"},
+                    "entity_name": {"type": "string"},
                     "emphasis": {"type": "array", "items": {"type": "string"}},
                     "keywords": {"type": "array", "items": {"type": "string"}},
                     "messages": {"type": "array", "items": {"type": "string"}},
                 },
                 "required": ["id", "narration", "on_screen_text", "purpose", "hud", "thought", "shadow", "outside",
-                             "inside", "stat_label", "insert_text", "insert_date", "entity_role", "emphasis",
+                             "inside", "stat_label", "insert_text", "insert_date", "entity_role", "entity_name", "emphasis",
                              "keywords", "messages"],
                 "additionalProperties": False,
             },
@@ -66,7 +68,9 @@ META_SCHEMA = {
 SYSTEM = """You are a professional documentary script translator and YouTube narrator-writer.
 Translate faithfully but naturally for voice-over in {lang}: short spoken sentences, same facts, same tone and
 suspense, same number of scenes. Do NOT add or remove facts. Write all numbers, years and dates as words in
-narration (they are read by a TTS voice). Keep personal names and place names in their original spelling.
+narration (they are read by a TTS voice). Keep personal names and place names in their original spelling;
+translate descriptive labels (e.g. a job title used as a speaker name). Translate the channel name "Hồ Sơ Lạnh"
+as "Cold Case Files".
 "emphasis" items must be phrases that appear VERBATIM in your translated narration. Return only the JSON."""
 
 

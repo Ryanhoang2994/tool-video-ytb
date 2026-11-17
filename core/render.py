@@ -426,7 +426,7 @@ def render_item(item: dict, out: Path, cfg: dict, plates: Path, labels: Path) ->
                  f"fade=t=out:st={max(t0 + 0.5, span - 0.4):.2f}:d=0.3:alpha=1")
     q = shots[0].get("quote") if shots else None
     if q and q[0]:
-        qp, qn = graphics.quote_frames(q[0], q[1], labels / f"q_{hashlib.md5(q[0].encode()).hexdigest()[:10]}", fps, W, H)
+        qp, qn = graphics.quote_frames(q[0], q[1], labels / f"q_{hashlib.md5((q[0] + '|' + q[1]).encode()).hexdigest()[:10]}", fps, W, H)
         qi = inp("-framerate", fps, "-i", qp)
         over(f"[{qi}:v]format=rgba,tpad=stop_mode=clone:stop_duration={max(0.1, span - qn / fps):.2f},"
              f"setpts=PTS+0.3/TB", "overlay=0:0:eof_action=pass")
