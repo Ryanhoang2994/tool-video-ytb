@@ -208,6 +208,31 @@ def download(url: str, dest: Path, *, headers=None, max_mb: float = 200) -> Path
 
 # ---------------- ffmpeg ----------------
 
+def ram_gb() -> tuple[float, float]:
+    """(tổng RAM, RAM còn trống) tính bằng GB - Windows / Linux / macOS, không cần thư viện ngoài. Không đọc được -> (0, 0)."""
+    try:
+        if os.name == "nt":
+            import ctypes
+
+            class MS(ctypes.Structure):
+                _fields_ = [("dwLength", ctypes.c_ulong), ("dwMemoryLoad", ctypes.c_ulong),
+                            ("ullTotalPhys", ctypes.c_ulonglong), ("ullAvailPhys", ctypes.c_ulonglong),
+                            ("ullTotalPageFile", ctypes.c_ulonglong), ("ullAvailPageFile", ctypes.c_ulonglong),
+                            ("ullTotalVirtual", ctypes.c_ulonglong), ("ullAvailVirtual", ctypes.c_ulonglong),
+                            ("ullAvailExtendedVirtual", ctypes.c_ulonglong)]
+            m = MS()
+            m.dwLength = ctypes.sizeof(MS)
+            ctypes.windll.kernel32.GlobalMemoryStatusEx(ctypes.byref(m))
+            return m.ullTotalPhys / 2**30, m.ullAvailPhys / 2**30
+        if Path("/proc/meminfo").exists():
+            info = {l.split(":")[0]: int(l.split()[1]) for l in Path("/proc/meminfo").read_text().splitlines() if ":" in l}
+            return info["MemTotal"] / 2**20, info.get("MemAvailable", info.get("MemFree", 0)) / 2**20
+        tot = int(subprocess.run(["sysctl", "-n", "hw.memsize"], capture_output=True, text=True).stdout or 0)
+        return tot / 2**30, tot / 2**30 * 0.5
+    except Exception:  # noqa: BLE001
+        return 0.0, 0.0
+
+
 def need_ffmpeg() -> None:
     if not shutil.which("ffmpeg") or not shutil.which("ffprobe"):
         raise SystemExit("Chưa cài ffmpeg. Windows: winget install ffmpeg  |  Ubuntu: sudo apt install ffmpeg")

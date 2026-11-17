@@ -25,12 +25,13 @@ GEN_DIR = ROOT / "assets" / "sfx" / "_gen"
 
 def _write(path: Path, x: np.ndarray, sr: int = SR, ch: int = 1) -> Path:
     path.parent.mkdir(parents=True, exist_ok=True)
-    x = np.clip(x, -1, 1)
+    step = sr * ch * 30  # ghi từng khúc 30 giây -> video 45 phút không phải giữ thêm vài GB trong RAM
     with wave.open(str(path), "wb") as w:
         w.setnchannels(ch)
         w.setsampwidth(2)
         w.setframerate(sr)
-        w.writeframes((x * 32767).astype("<i2").tobytes())
+        for i in range(0, len(x), step):
+            w.writeframes((np.clip(x[i:i + step], -1, 1) * 32767).astype("<i2").tobytes())
     return path
 
 
@@ -746,7 +747,10 @@ def build_music_track(tl: dict, cfg: dict, out: Path) -> Path | None:
     peak = np.abs(track).max()
     if peak > 0:
         track *= 0.8 / peak
-    stereo = np.stack([track, np.roll(track, 240)], axis=1).reshape(-1)
+    stereo = np.empty(len(track) * 2, np.float32)
+    stereo[0::2] = track
+    stereo[1::2] = np.roll(track, 240)
+    del track
     _write(out, stereo, ch=2)
     log(f"  Nhạc theo cảm xúc: {' -> '.join(dict.fromkeys(s[2] for s in segs))}")
     return out

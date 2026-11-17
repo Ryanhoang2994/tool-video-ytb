@@ -12,7 +12,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 
 from . import graphics, motion, stylize
-from .util import ROOT, Project, ffprobe_duration, log, need_ffmpeg, run
+from .util import ROOT, Project, ffprobe_duration, log, need_ffmpeg, ram_gb, run
 
 LOOKS = {
     "bright": "eq=saturation=1.06:contrast=1.03,unsharp=5:5:0.4",
@@ -46,10 +46,23 @@ def has_nvenc() -> bool:
     return _NVENC
 
 
+_THREADS = {"n": 0}
+
+
+def _auto_workers(rc: dict) -> int:
+    """Số đoạn dựng song song: theo CPU nhưng không vượt RAM (mỗi ffmpeg ~1.5 GB) - tránh ăn hết RAM máy."""
+    cpu = max(1, (os.cpu_count() or 2) // 2)
+    tot, free = ram_gb()
+    budget = min(free - 2, tot * rc.get("max_ram_ratio", 0.6)) if tot else 6
+    w = max(1, min(cpu, int(budget / rc.get("ram_per_worker_gb", 1.5)), rc.get("max_workers", 8)))
+    log(f"  Dựng song song {w} đoạn (CPU {os.cpu_count()} luồng, RAM {tot:.0f} GB, trống {free:.0f} GB)")
+    return w
+
+
 def _enc(cfg: dict) -> list[str]:
     rc = cfg["render"]
     enc = rc.get("encoder", "auto")
-    common = ["-pix_fmt", "yuv420p", "-r", str(rc["fps"]), "-video_track_timescale", "90000", "-an"]
+    common = (["-threads", str(_THREADS["n"])] if _THREADS["n"] else []) + ["-pix_fmt", "yuv420p", "-r", str(rc["fps"]), "-video_track_timescale", "90000", "-an"]
     if enc == "nvenc" or (enc == "auto" and has_nvenc()):
         return ["-c:v", "h264_nvenc", "-preset", "p5", "-rc", "vbr", "-cq", str(rc.get("crf", 20) + 2), "-b:v", "0",
                 *common]
@@ -560,7 +573,8 @@ def render_video(project: Project, cfg: dict, workers: int = 0, preview: bool = 
 
     todo = [j for j in jobs if not _ok(j[1])]
     log(f"Render {len(todo)}/{len(jobs)} đoạn (đã cache {len(jobs) - len(todo)})...")
-    workers = workers or max(1, (os.cpu_count() or 2) // 2)
+    workers = workers or rc.get("workers") or _auto_workers(rc)
+    _THREADS["n"] = max(2, (os.cpu_count() or 4) // workers)  # mỗi ffmpeg chỉ dùng phần CPU của nó -> đỡ ăn RAM
     done = 0
     with ThreadPoolExecutor(workers) as ex:
         futs = {ex.submit(render_item, it, out, cfg, plates, labels): (it, out) for it, out in todo}

@@ -130,6 +130,9 @@ render:
   width: 1920
   height: 1080
   fps: 30
+  # workers: 4          # số đoạn dựng song song (bỏ trống = tự tính theo CPU + RAM trống)
+  max_ram_ratio: 0.6     # dựng video dùng tối đa ~60% RAM máy
+  max_workers: 8
   look: "dark"                    # dark (phim tài liệu tội phạm, tối + khói) | vintage | noir | clean
   burn_subtitles: false           # true = in phụ đề cứng vào video
   music_volume: 0.10              # nhạc nền (đặt file .mp3 vào assets/music/)
