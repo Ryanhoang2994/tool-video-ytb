@@ -11,6 +11,7 @@ Kết quả lưu vào projects/<slug>/research.json
 from __future__ import annotations
 
 import re
+import time
 from pathlib import Path
 
 from bs4 import BeautifulSoup
@@ -176,7 +177,20 @@ def run_research(project: Project, topic: str, cfg: dict, *, en_query: str = "",
     for lang in rc.get("wikipedia_langs", ["vi", "en"]):
         q = q_en if lang == "en" else topic
         log(f"Wikipedia [{lang}]: {q}")
-        sources += wikipedia(q, lang, max_chars=max_chars)
+        # tên tập kiểu "Goldsboro 1961: The Day America..." -> thử thêm phần trước dấu ':'/'–' và thêm năm
+        short = re.split(r"\s*[:–—]\s*", q)[0].strip()
+        queries = [q] + [x for x in (short, f"{short} {years}".strip()) if x and x != q]
+        got = []
+        for attempt in range(3):  # Wikipedia hay trả 429 khi chạy song song -> chờ rồi thử lại
+            for qq in queries:
+                got = wikipedia(qq, lang, max_chars=max_chars)
+                if got:
+                    break
+            if got or lang != "en":
+                break
+            log(f"  Wikipedia [{lang}] trống, chờ {60 * (attempt + 1)}s rồi thử lại")
+            time.sleep(60 * (attempt + 1))
+        sources += got
 
     n = rc.get("max_newspaper_hits", 25)
     log(f"Báo cũ Chronicling America: {q_en}")
