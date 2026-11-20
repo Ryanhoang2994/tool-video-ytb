@@ -18,6 +18,13 @@ script:
     - Không dùng truyện của người khác khi chưa được phép. Không máu me, không nhắm vào người thật.
     - camera: "hold" ở đoạn cần quan sát, "push_in" chậm khi tiết lộ; sound: footsteps, door, heartbeat, wind, night,
       silence (khoảng lặng trước cú hù), riser trước cao trào.
+    - ĐƯỜNG CONG CĂNG THẲNG (bắt buộc đặt fx cho từng cảnh, đừng để "auto" cả video): mỗi nhịp sợ gồm
+      2-3 cảnh fx "dread" (dồn dần, câu ngắn lại, chi tiết bất thường rõ dần) -> 1 cảnh fx "jumpscare" hoặc "reveal"
+      -> 1-2 cảnh fx "none" để người xem thở rồi mới dồn tiếp. Cú hù phải có lý do trong truyện (thứ đã được gieo
+      trước đó xuất hiện), không hù vô cớ.
+    - Số cú "jumpscare": khoảng 1 cú mỗi 1-1,5 phút, không đặt ở 2 cảnh liền nhau; video dưới 1 phút: đúng 1 cú gần
+      cuối. Cảnh jumpscare: narration ngắn (10-25 từ), cụm gây giật mình nằm ở CUỐI câu và ghi nguyên văn vào emphasis.
+    - Đèn/điện có vấn đề -> fx "flicker". Thiết bị, camera, băng ghi hình -> fx "glitch".
     - "character" = nhân vật 2D đơn giản (image_prompt_en tả không gian vắng, tối, bóng đổ, chi tiết bất thường).
 media:
   mode: "ai_only"
@@ -33,6 +40,8 @@ render:
   subtitle_style: "story"
   chapter_style: "overlay"  # tên chương hiện đè lên cảnh, lời kể không dừng (overlay | card | none)
 edit:
+  fx_style: "horror"           # tự nhận thêm jumpscare / dread / flicker theo lời kể
+  jumpscare_gap: 40            # giây tối thiểu giữa 2 cú hù doạ
   fog: true
   fog_opacity: 0.12
   flicker: false

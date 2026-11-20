@@ -22,7 +22,7 @@ MOTIONS = ["push_in", "pull_out", "pan_lr", "pan_rl", "tilt_down", "tilt_up", "p
 
 
 def zoompan_expr(motion: str, frames: int, fx: float, fy: float, zoom: float, W: int, H: int, fps: int,
-                 punches: list[int] | None = None, shake: float = 0.0) -> str:
+                 punches: list[int] | None = None, shake: float = 0.0, amp: float = 0.075) -> str:
     """Biểu thức zoompan cho 1 shot. frames = tổng frame của stream (kể cả phần chồng chuyển cảnh).
     punches: các frame "nhấn" -> camera giật vào nhanh rồi nhả (+ rung nếu shake > 0)."""
     zp = _zoompan_core(motion, frames, fx, fy, zoom, W, H, fps)
@@ -31,7 +31,7 @@ def zoompan_expr(motion: str, frames: int, fx: float, fy: float, zoom: float, W:
     m = __import__("re").match(r"zoompan=z='(.*)':x='(.*)':y='(.*)':d=1:(.*)$", zp)
     z, x, y, rest = m.groups()
     pul = "+".join(f"if(gte(on,{f}),exp(-(on-{f})/7),0)" for f in punches)
-    z2 = f"({z})*(1+0.075*({pul}))"
+    z2 = f"({z})*(1+{amp:.3f}*({pul}))"
     if shake > 0:
         sh = "+".join(f"if(gte(on,{f}),exp(-(on-{f})/9),0)" for f in punches)
         x = f"max(0,min(iw-iw/zoom,({x})+{shake * W:.1f}*sin(on*2.3)*({sh})))"

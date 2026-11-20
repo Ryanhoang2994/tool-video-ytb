@@ -6,7 +6,11 @@ scene["fx"]:
   impact   khoảnh khắc chấn động: giật camera + chớp trắng + "boom"
   reveal   tiết lộ: im lặng ngắn trước, rồi "boom" + chớp
   glitch   nhiễu tín hiệu (bí ẩn, công nghệ, ký ức chập chờn)
-  auto     tool tự đoán theo lời đọc (máu, xác, giết... -> shudder; truy đuổi, nổ súng... -> action)
+  jumpscare cú hù doạ: tối + lặng nửa giây, rồi chớp trắng/âm bản, camera lao vào + rung mạnh, tiếng rít chói
+  dread    dồn căng thẳng suốt cảnh: tối dần, mất màu, viền đen khép lại, nhịp tim nhanh dần + tiếng trầm rền
+  flicker  đèn chập chờn: hình tối/sáng thất thường + tiếng điện rè
+  auto     tool tự đoán theo lời đọc (máu, xác, giết... -> shudder; truy đuổi, nổ súng... -> action;
+           preset kinh dị (edit.fx_style: horror) còn tự nhận jumpscare / dread / flicker)
   none     không hiệu ứng
 scene["emphasis"]: ["cụm từ quan trọng", ...] -> đúng lúc đọc tới: camera giật vào, "boom", chữ đập ra màn hình.
 """
@@ -25,7 +29,38 @@ ACTION = re.compile(
     r"vật lộn|giằng co|chase|shoot|gunfire|explosion|raid|crash|escape|jumped", re.I)
 GLITCH = re.compile(r"mất tích không dấu vết|biến mất|không thể giải thích|tín hiệu|chập chờn|ký ức", re.I)
 
-FX_MUSIC = {"shudder": "horror", "action": "action"}
+# --- kinh dị / chuyện ma (chỉ tự nhận khi edit.fx_style = horror) ---
+JUMP = re.compile(
+    r"đột nhiên|bỗng nhiên|bỗng dưng|bất thình lình|thình lình|bất chợt|ngay sau lưng|ngay phía sau|ngay bên tai|"
+    r"vụt (qua|hiện|tắt)|hiện ra ngay|chộp lấy|túm lấy|hét lên|thét lên|gào lên|rú lên|mở bừng mắt|"
+    r"suddenly|all at once|out of nowhere|right behind (me|him|her|them)|lunged|grabbed|screamed|shrieked|"
+    r"slammed (shut|open)|burst open|snapped open", re.I)
+DREAD = re.compile(
+    r"tiếng (bước chân|gõ|cào|thở|khóc|cười|thì thầm|rên|kéo lê|cọt kẹt)|thì thầm|thì thào|lạnh (sống lưng|gáy|toát)|"
+    r"nổi da gà|sởn gai ốc|rợn người|bóng (đen|người|trắng)|ai đó đang|có (thứ|cái) gì đó|nhìn chằm chằm|"
+    r"im lặng đến|tối om|tối đen|cánh cửa (từ từ|hé|khẽ)|không dám (thở|quay|nhìn)|nín thở|"
+    r"footsteps|whisper|knocking|scratching|shadow|staring|breathing|something was|someone was|in the dark|"
+    r"held (my|his|her) breath|goosebumps|chill ran", re.I)
+FLICKER = re.compile(
+    r"đèn (chập chờn|nhấp nháy|phụt tắt|vụt tắt|tắt phụt|chớp tắt)|mất điện|cúp điện|bóng đèn (nổ|chớp)|"
+    r"lights? (began to |started to )?flicker|lights? went out|power went out|bulb (burst|popped)", re.I)
+
+# --- mọi thể loại: hồi hộp / chấn động / tiết lộ ---
+TENSION = re.compile(
+    r"không ai (biết|ngờ|hay)|chưa ai (biết|ngờ)|chỉ còn (vài|\d+|một|hai|ba|mấy) (phút|giây|giờ)|từng (giây|phút)|"
+    r"đếm ngược|nín thở|im lặng (bao trùm|đáng sợ|chết chóc)|mỗi lúc một (gần|lớn|nhanh)|không còn đường|"
+    r"no one (knew|noticed|realized)|nobody (knew|noticed)|had no idea|little did|minutes (before|away|left)|"
+    r"seconds (before|away|left)|the clock|running out|closer and closer|dead silence|held (its|their) breath|"
+    r"what (he|she|they) (didn't|did not) know|too late", re.I)
+IMPACT = re.compile(
+    r"sụp đổ|đổ sập|phát nổ|nổ tung|đâm (vào|sầm)|lao xuống|rơi xuống|vỡ tung|chìm (xuống|hẳn)|bốc cháy|trúng (đạn|ngư lôi)|"
+    r"explod|collaps|crashed|slammed into|struck|detonat|erupted|capsized|torpedo(ed)? hit|burst into flames|"
+    r"gave way|snapped|shattered", re.I)
+REVEAL = re.compile(
+    r"sự thật là|hoá ra|hóa ra|thì ra|thực chất|không phải (là )?tai nạn|"
+    r"the truth was|it turned out|turned out to be|in reality|was no accident|had been lying|was never", re.I)
+
+FX_MUSIC = {"shudder": "horror", "action": "action", "jumpscare": "horror", "dread": "tense", "flicker": "horror"}
 
 
 NEG = re.compile(r"(không|chưa|chẳng|chả|no|not|without)\W+(\w+\W+){0,2}$", re.I)
@@ -43,10 +78,26 @@ def detect(scene: dict, cfg: dict | None = None) -> str:
     if (cfg or {}).get("edit", {}).get("auto_fx", True) is False:
         return "none"
     t = scene.get("narration", "")
+    if (cfg or {}).get("edit", {}).get("fx_style") == "horror":
+        if _hits(JUMP, t):
+            return "jumpscare"
+        if _hits(FLICKER, t):
+            return "flicker"
+        if _hits(SHUDDER, t):
+            return "shudder"
+        if _hits(DREAD, t):
+            return "dread"
     if _hits(SHUDDER, t):
         return "shudder"
     if _hits(ACTION, t):
         return "action"
+    if (cfg or {}).get("edit", {}).get("auto_fx_level", 2) >= 2:  # 1 = chỉ shudder/action như bản cũ
+        if _hits(IMPACT, t):
+            return "impact"
+        if _hits(REVEAL, t):
+            return "reveal"
+        if _hits(TENSION, t):
+            return "dread"
     return "none"
 
 
@@ -109,11 +160,19 @@ def accents(scene: dict, fx: str, audio_dur: float, pts: list | None = None) -> 
         i = text.find(_norm(ph))
         if i >= 0:
             pos.append(i)
+    if fx == "jumpscare":  # đúng 1 cú: ở cụm emphasis đầu tiên, không có thì ở từ "đột nhiên..." hoặc cuối cảnh
+        if not pos:
+            hit = _hits(JUMP, text)
+            # "Đột nhiên, cửa bật mở": từ báo hiệu ở đầu câu -> cú hù rơi vào cuối câu, nơi sự việc xảy ra
+            pos = [hit[0].start()] if hit and hit[0].start() > n * 0.35 else [int(n * 0.8)]
+        t0 = min(max(round(at_time(pts, pos[0]) + 0.05, 2), 0.7), max(0.7, audio_dur - 0.3))
+        return [t0]
     if fx in ("shudder", "action", "glitch"):
         rx = {"shudder": SHUDDER, "action": ACTION, "glitch": GLITCH}[fx]
         pos += [m.start() for m in _hits(rx, text)]
     if fx in ("impact", "reveal") and not pos:
-        pos.append(int(n * 0.55))
+        hit = _hits(IMPACT if fx == "impact" else REVEAL, text)
+        pos.append(hit[0].start() if hit and (fx == "impact" or hit[0].start() > n * 0.35) else int(n * 0.6))
     times = sorted({round(at_time(pts, p) + 0.05, 2) for p in pos})
     out: list[float] = []
     for t in times:  # cách nhau tối thiểu 0.9s
@@ -155,6 +214,25 @@ def post_filters(fx: str, acc: list[float], span: float) -> list[str]:
     elif fx in ("impact", "reveal"):
         for a in acc:
             f.append(f"eq=brightness=0.4:saturation=0.6:{win(a, 0.07)}")
+    elif fx == "jumpscare":
+        f.append("eq=saturation=0.7:contrast=1.08")
+        for a in acc:
+            f.append(f"eq=brightness=-0.16:saturation=0.4:{win(max(0, a - 0.55), 0.55)}")  # tối + lặng trước cú hù
+            f.append(f"eq=brightness=0.6:contrast=1.5:{win(a, 0.07)}")                      # chớp trắng
+            f.append(f"negate={win(a + 0.07, 0.08)}")                                       # âm bản 2 khung hình
+            f.append(f"rgbashift=rh=-26:bh=26:gv=8:{win(a, 0.45)}")
+            f.append(f"noise=alls=55:allf=t:{win(a, 0.5)}")
+            f.append(f"colorchannelmixer=rr=1.45:gg=0.5:bb=0.5:{win(a + 0.15, 0.12)}")
+            f.append(f"eq=contrast=1.45:saturation=0.15:brightness=-0.04:{win(a + 0.27, 0.9)}")
+    elif fx == "dread":
+        s_ = max(span, 0.5)
+        f.append(f"eq=brightness='-0.05*min(1,t/{s_:.2f})-0.03*pow(sin(PI*t/0.9),8)':"
+                 f"saturation='1-0.6*min(1,t/{s_:.2f})':contrast=1.1:eval=frame")
+        f.append(f"vignette=angle='PI/9+(PI/8)*min(1,t/{s_:.2f})':eval=frame")
+        f.append(f"noise=alls=14:allf=t:enable='gt(t,{s_ * 0.5:.2f})'")
+    elif fx == "flicker":
+        f.append("eq=brightness='-0.34*lt(mod(t*6.7,1),0.13)-0.22*lt(mod(t*2.9+0.37,1),0.09)"
+                 "-0.5*lt(mod(t*0.83+0.6,1),0.05)+0.05*lt(mod(t*4.3+0.2,1),0.04)':saturation=0.8:eval=frame")
     elif fx == "glitch":
         f.append("rgbashift=rh=-10:bh=10:enable='lt(mod(t*3.1,1),0.06)'")
         f.append("noise=alls=25:allf=t:enable='lt(mod(t*2.3,1),0.05)'")
@@ -165,7 +243,12 @@ def post_filters(fx: str, acc: list[float], span: float) -> list[str]:
 
 
 def shake_amount(fx: str) -> float:
-    return {"shudder": 0.012, "action": 0.009, "impact": 0.006, "reveal": 0.0}.get(fx, 0.003)
+    return {"shudder": 0.012, "action": 0.009, "impact": 0.006, "reveal": 0.0, "jumpscare": 0.03}.get(fx, 0.003)
+
+
+def punch_amount(fx: str) -> float:
+    """Camera giật vào bao nhiêu ở mỗi nhịp nhấn (jumpscare: lao thẳng vào mặt)."""
+    return {"jumpscare": 0.34, "shudder": 0.09}.get(fx, 0.075)
 
 
 def emphasis_png(text: str, out, W: int, H: int, style: str = "dark"):

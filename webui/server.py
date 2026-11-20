@@ -225,10 +225,11 @@ def api_create():
     if (d / "script.json").exists() or (d / "research.json").exists():
         abort(409, f"Đã có dự án '{slug}' - mở dự án đó hoặc đổi tên chủ đề")
     preset = b.get("preset") or "crime_doc"
-    pj = {k: b[k] for k in ("audience", "minutes", "language", "country", "currency", "data_date", "story_type",
-                            "brand") if b.get(k) not in (None, "")}
+    pj = {k: b[k] for k in ("audience", "minutes", "aspect", "language", "country", "currency", "data_date",
+                            "story_type", "brand") if b.get(k) not in (None, "")}
     if pj.get("minutes"):
-        pj["minutes"] = int(pj["minutes"])
+        m = max(0.25, min(180.0, float(pj["minutes"])))
+        pj["minutes"] = int(m) if m == int(m) else m
     d.mkdir(parents=True, exist_ok=True)
     (d / "project.json").write_text(json.dumps({"preset": preset, "project": pj}, ensure_ascii=False, indent=1),
                                     "utf-8")

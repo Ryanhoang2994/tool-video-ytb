@@ -267,6 +267,59 @@ def _gen_sting() -> np.ndarray:
     return np.concatenate([swell, (boom * 0.9 + screech + cluster)]).astype(np.float32)
 
 
+def _gen_scare() -> np.ndarray:
+    """Cú hù doạ: hút ngược 0.35s -> nổ trầm + chùm rít chói lệch tông + nhiễu, tắt dần ~2s."""
+    rng = np.random.default_rng(31)
+    n_sw, n_hit = int(SR * 0.35), int(SR * 2.2)
+    t = np.arange(n_sw) / SR
+    swell = np.convolve(rng.standard_normal(n_sw), np.ones(12) / 12, mode="same") * (t / t[-1]) ** 4 * 0.9
+    th = np.arange(n_hit) / SR
+    boom = np.sin(2 * np.pi * (95 * np.exp(-th * 5) + 32) * th) * np.exp(-th * 2.2)
+    screech = sum(np.sin(2 * np.pi * f * th * (1 + 0.04 * np.exp(-th * 3)) + np.sin(2 * np.pi * 9 * th) * 4)
+                  for f in (1245, 1397, 1661, 2349, 2794)) / 5
+    screech *= (np.exp(-th * 1.9) + 0.25 * np.exp(-th * 0.7)) * 0.6
+    burst = rng.standard_normal(n_hit) * np.exp(-th * 14) * 0.7
+    low = sum(np.sin(2 * np.pi * f * th) for f in (55, 58.3, 82.4)) / 3 * np.exp(-th * 0.9) * 0.55
+    return np.concatenate([swell, boom * 1.0 + screech + burst + low]).astype(np.float32)
+
+
+def _gen_buzz(seconds: float = 6.0) -> np.ndarray:
+    """Tiếng điện rè của bóng đèn sắp hỏng (50Hz + hoạ âm, ngắt quãng)."""
+    rng = np.random.default_rng(5)
+    t = np.arange(int(SR * seconds)) / SR
+    x = sum(np.sin(2 * np.pi * 50 * k * t) / k for k in (1, 2, 3, 5, 7, 9)) * 0.3
+    x += rng.standard_normal(len(t)) * 0.05
+    gate = ((np.mod(t * 6.7, 1) < 0.13) | (np.mod(t * 2.9 + 0.37, 1) < 0.09) | (np.mod(t * 0.83 + 0.6, 1) < 0.05))
+    env = _smooth(np.where(gate, 1.0, 0.18).astype(np.float32), 200)
+    return (x * env).astype(np.float32)
+
+
+def tension_bed(seconds: float) -> np.ndarray:
+    """Nền dồn căng thẳng cho đúng 1 cảnh: tiếng trầm rền to dần + nhịp tim nhanh dần (60 -> 125 nhịp/phút)."""
+    n = max(int(SR * seconds), SR // 2)
+    t = np.arange(n) / SR
+    p = t / t[-1]
+    drone = sum(np.sin(2 * np.pi * f * t + np.sin(2 * np.pi * 0.31 * t) * 1.5) for f in (41.2, 43.6, 61.7)) / 3
+    drone *= (0.25 + 0.75 * p ** 1.6) * 0.5
+    hiss = _smooth(np.random.default_rng(3).standard_normal(n).astype(np.float32), 6) * p ** 3 * 0.12
+    x = (drone + hiss).astype(np.float32)
+    hb = np.sin(2 * np.pi * 52 * np.arange(int(SR * 0.16)) / SR) * np.exp(-np.arange(int(SR * 0.16)) / SR * 22)
+    pos = 0.3
+    while pos < seconds - 0.4:
+        k = pos / seconds
+        i = int(pos * SR)
+        g = 0.55 + 0.45 * k
+        x[i:i + len(hb)] += hb[: max(0, min(len(hb), n - i))] * g
+        j = i + int(SR * 0.22)
+        if j < n:
+            x[j:j + len(hb)] += hb[: max(0, min(len(hb), n - j))] * g * 0.6
+        pos += 60.0 / (60 + 65 * k)
+    f = min(n // 4, int(SR * 0.7))
+    x[:f] *= np.linspace(0, 1, f)
+    x[-int(SR * 0.08):] *= np.linspace(1, 0, int(SR * 0.08))
+    return x / (np.abs(x).max() + 1e-6) * 0.9
+
+
 def _gen_glitch() -> np.ndarray:
     rng = np.random.default_rng(21)
     out = np.zeros(int(SR * 0.45), np.float32)
@@ -290,7 +343,8 @@ def load(name: str) -> np.ndarray:
     if not gen.exists():
         gens = {"hit": _gen_hit, "whoosh": _gen_whoosh, "flash": _gen_flash, "riser": _gen_riser,
                 "rain": _gen_rain, "heartbeat": _gen_heartbeat, "footsteps": _gen_footsteps, "door": _gen_door,
-                "notify": _gen_notify, "tick": _gen_tick, "sting": _gen_sting, "glitch": _gen_glitch}
+                "notify": _gen_notify, "tick": _gen_tick, "sting": _gen_sting, "glitch": _gen_glitch,
+                "scare": _gen_scare, "buzz": _gen_buzz}
         for amb in ("underwater", "wind", "night", "office", "cafe", "city"):
             gens[amb] = (lambda k=amb: _gen_ambience(k))
         x = gens.get(name, lambda: _gen_type_key(0))()
@@ -326,7 +380,8 @@ def build_sfx_track(tl: dict, cfg: dict, out: Path) -> Path | None:
            "type": sc.get("type", 0.25), "riser": sc.get("riser", 0.3), "rain": sc.get("rain", 0.18),
            "ambience": sc.get("ambience", 0.16), "footsteps": sc.get("footsteps", 0.45), "door": sc.get("door", 0.45),
            "heartbeat": sc.get("heartbeat", 0.35), "notify": sc.get("notify", 0.4), "tick": sc.get("tick", 0.3),
-           "sting": sc.get("sting", 0.6), "glitch": sc.get("glitch", 0.3)}
+           "sting": sc.get("sting", 0.6), "glitch": sc.get("glitch", 0.3), "scare": sc.get("scare", 0.95),
+           "tension": sc.get("tension", 0.5), "buzz": sc.get("buzz", 0.3)}
     AMB = ("underwater", "wind", "night", "office", "cafe", "city", "rain", "heartbeat")
     import re as _re
 
@@ -399,7 +454,9 @@ def build_sfx_track(tl: dict, cfg: dict, out: Path) -> Path | None:
         fxk, acc = it.get("fx") or "none", it.get("accents") or []
         for i_, a_ in enumerate(acc):  # nhấn nhá đúng nhịp lời đọc
             at = it["start"] + a_
-            if fxk == "shudder":
+            if fxk == "jumpscare":
+                put("scare", at - 0.35)
+            elif fxk == "shudder":
                 put("sting", at - 0.6, cache.setdefault("sting", load("sting")) * (1.0 if i_ == 0 else 0.6))
             elif fxk == "action":
                 put("hit", at, cache.setdefault("hit", load("hit")) * 0.8)
@@ -420,6 +477,16 @@ def build_sfx_track(tl: dict, cfg: dict, out: Path) -> Path | None:
             clip[:f_] *= np.linspace(0, 1, f_)
             clip[-f_:] *= np.linspace(1, 0, f_)
             put("heartbeat", it["start"], clip)
+        if fxk == "dread":  # tiếng trầm rền + nhịp tim nhanh dần tới hết cảnh
+            put("tension", it["start"], tension_bed(it["duration"]))
+            n_events += 1
+        if fxk == "jumpscare" and acc and acc[0] > 1.6:  # dồn ngắn trước cú hù, cắt im ngay trước khi nổ
+            put("tension", it["start"], tension_bed(acc[0] - 0.45) * 0.8)
+        if fxk == "flicker":
+            bz = cache.setdefault("buzz", load("buzz"))
+            clip = np.tile(bz, int(np.ceil(it["duration"] / (len(bz) / SR))))[: int(it["duration"] * SR)].copy()
+            put("buzz", it["start"], clip)
+            n_events += 1
         if fxk == "action":
             for sh in shots[1:]:
                 put("whoosh", sh["start"] - 0.2, cache.setdefault("whoosh", load("whoosh")) * 0.5)
@@ -747,6 +814,15 @@ def build_music_track(tl: dict, cfg: dict, out: Path) -> Path | None:
     peak = np.abs(track).max()
     if peak > 0:
         track *= 0.8 / peak
+    for it in tl["items"]:  # khoảng lặng trước cú hù doạ: nhạc tụt hẳn rồi mới nổ
+        if it.get("fx") == "jumpscare":
+            for a_ in it.get("accents") or []:
+                at = it["start"] + a_
+                i0, i1, i2, i3 = (int(max(0, x) * SR) for x in (at - 0.95, at - 0.6, at + 0.05, at + 0.6))
+                i1, i2, i3 = min(i1, total), min(i2, total), min(i3, total)
+                track[i0:i1] *= np.linspace(1, 0.05, i1 - i0)
+                track[i1:i2] *= 0.05
+                track[i2:i3] *= np.linspace(0.05, 1, i3 - i2)
     stereo = np.empty(len(track) * 2, np.float32)
     stereo[0::2] = track
     stereo[1::2] = np.roll(track, 240)

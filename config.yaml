@@ -5,14 +5,14 @@
 channel:
   name: "Hồ Sơ Lạnh"         # tên kênh (dùng trong intro/outro, thumbnail)
   language: "vi"                 # en | vi  (ngôn ngữ lời dẫn)
-  target_minutes: 40             # độ dài video mong muốn
-  words_per_minute: 190          # tốc độ đọc ước tính (en ~140-150, vi ~150-165)
+  target_minutes: 40             # độ dài mặc định; mỗi video chọn riêng được, từ 0.5 phút (Shorts) tới 180 phút
+  words_per_minute: auto         # tốc độ đọc: auto = en 160, vi 170 (đo từ video đã dựng) | hoặc ghi 1 con số
 
 # ---------- Viết kịch bản ----------
 script:
   model: "claude-opus-5-5"
   effort: "high"                 # low | medium | high | xhigh | max
-  chapters: 8                    # số chương (mỗi chương ~5 phút)
+  chapters: 8                    # số chương ở thời lượng mặc định; đổi thời lượng thì tool tự tính lại
   style: >
     Calm, slow, deep-voiced investigative documentary narration (cold case style).
     Open with a gripping hook in the first 30 seconds. Tell the story chronologically with a
@@ -107,6 +107,7 @@ voice:
 # Mẹo: tải 1 video đối thủ về máy rồi chạy `python studio.py analyze video.mp4` để đo nhịp cắt, độ zoom, màu
 # -> tool gợi ý các con số dưới đây cho giống nhịp kênh đó.
 edit:
+  auto_fx_level: 2               # 2 = tự nhận thêm cảnh hồi hộp / chấn động / tiết lộ | 1 = chỉ cảnh ghê rợn, hành động
   zoom: 0.14                      # độ zoom tối đa mỗi shot (0.08 nhẹ - 0.25 mạnh)
   transition: "cut"               # chuyển cảnh trong 1 đoạn: cut (cắt theo nhịp câu) | fade | dissolve | black
   flash_rate: 0.2                # tỉ lệ chớp trắng (đèn flash) khi vào ảnh vật chứng / mẩu báo

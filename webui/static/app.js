@@ -114,7 +114,9 @@ async function viewNew() {
     <input type="text" id="topic" placeholder="vd: Vụ không tặc D. B. Cooper  ·  Vì sao có người rất khó mở lời nhờ giúp đỡ?">
     <div class="sub" style="margin:6px 0 0;font-size:12px">Nhập chủ đề <b>cụ thể</b> (tên vụ việc / nhân vật, năm, địa điểm). Chủ đề chung chung như "vụ án thảm sát" thì Claude không biết viết về vụ nào.</div>
     <div class="cols">
-      <div><label>Thời lượng (phút)</label><input type="number" id="minutes" min="1" max="60" value="10"></div>
+      <div><label>Thời lượng (phút)</label><input type="number" id="minutes" min="0.5" max="180" step="0.5" value="10" list="minopts">
+        <datalist id="minopts"><option value="0.5"><option value="1"><option value="3"><option value="8"><option value="12"><option value="25"><option value="40"><option value="60"><option value="90"></datalist></div>
+      <div><label>Khung hình</label><select id="aspect"><option value="">Ngang 16:9 (YouTube)</option><option value="9:16">Dọc 9:16 (Shorts / Reels / TikTok)</option><option value="1:1">Vuông 1:1</option><option value="4:5">Dọc 4:5 (Facebook)</option></select></div>
       <div><label>Ngôn ngữ</label><select id="language"><option value="vi">Tiếng Việt</option><option value="en">English</option></select></div>
       <div style="grid-column: span 2"><label>Người xem</label><input type="text" id="audience" placeholder="vd: người 18-35 tuổi, chưa biết gì về chủ đề"></div>
     </div>
@@ -158,7 +160,7 @@ async function viewNew() {
   $("#go").onclick = async () => {
     const v = id => $("#" + id)?.value ?? "";
     const body = {
-      topic: v("topic").trim(), preset: cur, minutes: v("minutes"), language: v("language"), audience: v("audience"),
+      topic: v("topic").trim(), preset: cur, minutes: v("minutes"), aspect: v("aspect"), language: v("language"), audience: v("audience"),
       country: v("country"), currency: v("currency"), data_date: v("data_date"), story_type: v("story_type"), en: v("en"), years: v("years"),
       urls: v("urls"), notes: v("notes"), own_script: v("own"), run_all: $("#runall").checked,
       options: { backend: v("backend"), look: v("look") },

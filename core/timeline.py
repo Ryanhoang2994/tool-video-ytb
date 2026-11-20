@@ -124,6 +124,7 @@ def build_timeline(project: Project, cfg: dict) -> dict:
             return graphics.crime_title_card(l1, l2, out, board, W, H, small=ch["name"])
         return graphics.title_card(script["title"], ch["name"], out, W, H, font)
     chapter_starts: list[float] = []
+    is_short = float(ch.get("target_minutes") or 10) <= 1.5  # Shorts/Reels: không thẻ tiêu đề, không đuôi dài
     font = rc.get("font", "")
     # overlay: tên chương / tiêu đề hiện đè lên cảnh trong khi lời kể vẫn chạy (không ngắt nhịp)
     # card: thẻ riêng (kiểu cũ, có khoảng lặng) | none: không hiện
@@ -175,6 +176,12 @@ def build_timeline(project: Project, cfg: dict) -> dict:
                     graphics.dark_wall(int(W * 1.5), int(H * 1.5), 21).save(qb, quality=92)
                 mstate["quote_bg"] = str(qb)
             fxk = fxmod.detect(s, cfg)
+            if fxk == "jumpscare":  # hù doạ dày quá sẽ nhờn: giữ khoảng cách tối thiểu, cú thừa đổi thành dồn căng thẳng
+                gap = cfg.get("edit", {}).get("jumpscare_gap", 40)
+                if t - mstate.get("last_scare", -1e9) < gap:
+                    fxk = "dread"
+                else:
+                    mstate["last_scare"] = t
             pts = fxmod.anchors(s["narration"], project.path("audio", f"{s['id']}.wav"), timing[s["id"]]["duration"])
             acc = fxmod.accents(s, fxk, timing[s["id"]]["duration"], pts)
             if fxk == "action":
@@ -186,6 +193,7 @@ def build_timeline(project: Project, cfg: dict) -> dict:
                       if sh["start"] <= t + a < sh["start"] + sh["duration"]]
                 if pf and sh.get("kind") == "image":
                     sh["punches"], sh["shake"] = pf, shake
+                    sh["punch_amp"] = fxmod.punch_amount(fxk)
             hud_prev = mstate.get("hud", "")
             if s.get("hud"):  # bộ đếm góc màn hình giữ nguyên tới khi cảnh sau đổi; "none" = ẩn
                 mstate["hud"] = "" if s["hud"] == "none" else s["hud"]
@@ -212,19 +220,19 @@ def build_timeline(project: Project, cfg: dict) -> dict:
             pending = None
 
             if ci == 0 and si == 0:  # sau hook: tên video (+ chương 1 nếu chương 1 còn tiếp)
-                if chap_style == "card":
+                if chap_style == "card" and not is_short:
                     add_card(title_img(), TITLE_CARD_SEC, "title", script["title"])
                     if len(chap["scenes"]) > 1:
                         chapter_starts[0] = t
                         add_card(chapter_img(0, chap), CHAPTER_CARD_SEC, "chapter", chap["title"])
-                else:  # tiêu đề hiện đè lên cảnh kế tiếp, lời kể không dừng
+                elif not is_short:  # tiêu đề hiện đè lên cảnh kế tiếp, lời kể không dừng (video ngắn: bỏ, vào thẳng chuyện)
                     pending = {"kind": "title", "small": script.get("title_line1") or ch["name"],
                                "big": script.get("title_line2") or script["title"]}
                     if len(chap["scenes"]) > 1:
                         chapter_starts[0] = t
 
-    # tail 3s cho nhạc fade
-    tl = {"width": W, "height": H, "fps": rc["fps"], "duration": t + 3.0, "items": items,
+    # tail cho nhạc fade (video ngắn: 1 giây để không dư đuôi)
+    tl = {"width": W, "height": H, "fps": rc["fps"], "duration": t + (1.0 if is_short else 3.0), "items": items,
           "chapter_starts": chapter_starts}
     project.write_json("timeline.json", tl)
     _write_srt(project, tl)

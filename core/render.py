@@ -312,7 +312,7 @@ def render_item(item: dict, out: Path, cfg: dict, plates: Path, labels: Path) ->
             ii = inp("-loop", "1", "-framerate", fps, "-t", f"{L / fps + 0.5:.3f}", "-i", plate)
             zoom = sh.get("zoom", 0.14) * (0.5 if layers is not None else 1)  # cảnh lớp: nền trôi chậm (parallax)
             zp = motion.zoompan_expr(sh.get("motion", "push_in"), L, fx, fy, zoom, W, H, fps,
-                                     sh.get("punches"), sh.get("shake", 0.0))
+                                     sh.get("punches"), sh.get("shake", 0.0), sh.get("punch_amp", 0.075))
             torch = ""
             if sh.get("motion") == "torch":  # vùng sáng đèn pin lượn trên ảnh, xung quanh tối
                 torch = (f",vignette=angle=PI/2.1:eval=frame:x0='w*({fx}+0.18*sin(2*PI*n/{max(L, 1)}*0.9))'"

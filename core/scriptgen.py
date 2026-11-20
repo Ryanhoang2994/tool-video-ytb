@@ -114,7 +114,7 @@ SCENE_SCHEMA = {
                                             "unit": {"type": "string"}},
                              "required": ["value", "label", "unit"], "additionalProperties": False},
                     "fx": {"type": "string", "enum": ["auto", "none", "shudder", "action", "impact", "reveal",
-                                                      "glitch"]},
+                                                      "glitch", "jumpscare", "dread", "flicker"]},
                     "emphasis": {"type": "array", "items": {"type": "string"}},
                     "mood": {"type": "string", "enum": MOOD_ENUM},
                     "music": {"type": "string", "enum": MUSIC_ENUM},
@@ -170,6 +170,10 @@ STORYBOARD_RULES = """STORYBOARD - mỗi scene điền đủ:
   fx: nhấn nhá hình + tiếng cho cả cảnh - shudder (cảnh man rợ/ghê rợn: rùng mình, chớp đỏ, nhạc kinh dị),
   action (hành động: truy đuổi, nổ súng, nhảy dù... -> nhạc trống dồn dập, giật camera), impact (chấn động),
   reveal (tiết lộ bất ngờ), glitch (bí ẩn, ký ức chập chờn), none, auto (tool tự đoán theo lời đọc).
+  dread (mọi thể loại - dồn hồi hộp suốt cảnh: hình tối dần, viền đen khép lại, nhịp tim nhanh dần, tiếng trầm rền).
+  Riêng truyện kinh dị / chuyện ma / hư cấu (KHÔNG dùng cho sự kiện có nạn nhân thật):
+  jumpscare (cú hù doạ: lặng nửa giây rồi chớp + camera lao vào + tiếng rít; đặt cụm từ gây giật mình vào emphasis
+  để cú hù rơi ĐÚNG chữ đó), flicker (đèn chập chờn, tiếng điện rè).
   emphasis: 1-2 cụm từ NGUYÊN VĂN trong narration cần nhấn (con số gây sốc, tên hung thủ, chi tiết đắt giá) -> đúng
   lúc đọc tới: camera giật vào, "boom", chữ đập ra màn hình. Không lạm dụng: tối đa 1 cảnh nhấn / 3-4 cảnh.
   pause_after: giây im lặng sau câu chốt để người xem thấm (0 bình thường, 0.8-1.5 sau câu đắt giá).
@@ -221,6 +225,9 @@ KỂ CHUYỆN CÓ CẢM XÚC (video phải khiến người xem CẢM THẤY, kh
 - Cho thấy bằng hành động và chi tiết thay vì kể lể ("anh úp điện thoại xuống, rồi lại lật lên" thay vì "anh nghiện").
 - Trước câu chốt quan trọng: music "silence" hoặc pause_after 1-1.5 giây để câu đó "rơi" xuống.
 - Đổi mood/music theo cảm xúc từng chương, đừng giữ một màu suốt video.
+- NHỊP KỊCH TÍNH (mọi thể loại): mỗi chương đi theo sóng dồn -> đỉnh -> thả. 1-3 cảnh fx "dread" trước mỗi biến cố
+  (câu ngắn dần, chi tiết báo trước), cảnh biến cố fx "impact"/"action"/"reveal" có emphasis đúng chữ đắt giá,
+  rồi 1-2 cảnh fx "none" cho người xem thở. Đừng để "auto"/"none" suốt cả chương, cũng đừng dồn liên tục không nghỉ.
 - Cảnh man rợ/ghê rợn -> fx "shudder"; cảnh hành động (truy đuổi, đột kích, nhảy, nổ súng) -> fx "action";
   câu tiết lộ -> fx "reveal". Mỗi 3-4 cảnh có 1 cụm emphasis (con số sốc, tên, chi tiết đắt giá) để video có nhấn nhá.
 - Kết: không giảng đạo; để câu chuyện tự dẫn tới ý nghĩa, kết bằng hi vọng hoặc một câu hỏi chạm tới người xem."""
@@ -380,18 +387,20 @@ def build_outline_prompt(research: dict, cfg: dict) -> str:
     ch = cfg["channel"]
     sc = cfg["script"]
     lang = LANG_NAME.get(ch["language"], ch["language"])
+    lp = length_plan(cfg)
     return f"""<tu_lieu>
 {_corpus(research)}
 </tu_lieu>
 
 {project_context(cfg)}
 Chủ đề video: {research['topic']}
-Kênh: {ch['name']}. Ngôn ngữ lời dẫn: {lang}. Thời lượng mục tiêu: {ch['target_minutes']} phút.
+Kênh: {ch['name']}. Ngôn ngữ lời dẫn: {lang}. Thời lượng mục tiêu: {_fmt_minutes(lp['minutes'])} (~{lp['total_words']} từ lời đọc).
 Phong cách: {sc['style']}
 
-Hãy lập DÀN Ý cho video gồm đúng {sc['chapters']} chương, kể theo trình tự lôi cuốn
+Hãy lập DÀN Ý cho video gồm đúng {lp['chapters']} chương, kể theo trình tự lôi cuốn
 (bối cảnh thời đại -> nhân vật -> sự việc -> điều tra -> bước ngoặt -> kết cục/bí ẩn còn lại -> di sản).
-- hook: đoạn mở đầu 60-90 từ, gây tò mò mạnh, viết bằng {lang}.
+{_LENGTH_NOTE[lp['kind']]}
+- hook: đoạn mở đầu {lp['hook'][0]}-{lp['hook'][1]} từ, gây tò mò mạnh, viết bằng {lang}.
 - youtube_titles: 5 tiêu đề YouTube hấp dẫn nhưng trung thực ({lang}).
 - thumbnail_text: 2-5 chữ in lên thumbnail.
 - title_line1 / title_line2: tiêu đề 2 dòng cho thẻ mở đầu, dòng 1 ngắn màu xám (vd "VỤ KHÔNG TẶC"),
@@ -403,14 +412,84 @@ Hãy lập DÀN Ý cho video gồm đúng {sc['chapters']} chương, kể theo t
 """
 
 
+_LENGTH_NOTE = {
+    "short": ("ĐÂY LÀ VIDEO NGẮN (Shorts/Reels/TikTok): chỉ kể MỘT ý/một chi tiết đắt giá nhất của chủ đề, không tóm tắt "
+              "cả câu chuyện. Câu đầu tiên phải gây sốc/tò mò ngay trong 2 giây, không chào hỏi, không giới thiệu kênh. "
+              "Kết bằng một câu chốt hoặc câu hỏi mở thật ngắn."),
+    "brief": ("Video ngắn: gộp các phần trong trình tự trên cho vừa số chương, chỉ giữ các mốc chính và 1 bước ngoặt; "
+              "vào chuyện ngay, không dẫn dắt dài."),
+    "standard": "Gộp các phần trong trình tự trên cho vừa số chương nếu cần.",
+    "long": "Mỗi chương có một câu hỏi/mâu thuẫn riêng để giữ người xem.",
+    "epic": ("Video rất dài: chia câu chuyện thành các giai đoạn lớn, mỗi giai đoạn vài chương; mỗi chương có một câu "
+             "hỏi/mâu thuẫn riêng và cứ khoảng 10 phút phải có một bước ngoặt hoặc tiết lộ mới. Không lặp lại ý đã kể."),
+}
+
+
+def length_plan(cfg: dict, n_chapters: int | None = None) -> dict:
+    """Từ thời lượng mong muốn suy ra số chương, số từ, độ dài hook/cảnh... cho mọi cỡ video (30 giây -> 3 giờ).
+    Giữ nhịp của preset (số phút mỗi chương) khi người dùng đổi thời lượng."""
+    import math
+
+    ch, sc = cfg["channel"], cfg["script"]
+    minutes = float(ch.get("target_minutes") or 10)
+    wpm = float(ch.get("words_per_minute") or 160)
+    # video ngắn: cảnh ngắn nên khoảng nghỉ giữa cảnh chiếm nhiều thời gian hơn (đo thực tế ~117 từ/phút)
+    wpm *= 0.75 if minutes <= 1.5 else 0.9 if minutes <= 5 else 1.0
+    total = max(60, round(minutes * wpm))
+    base_min = float(ch.get("base_minutes") or minutes)
+    base_ch = sc.get("chapters")
+    if n_chapters:
+        chapters = n_chapters
+    else:
+        pace = base_min / base_ch if isinstance(base_ch, int) and base_ch > 0 else 5.0  # phút mỗi chương của preset
+        if isinstance(base_ch, int) and base_ch > 0 and abs(base_min - minutes) < 0.01:
+            chapters = base_ch
+        else:
+            pace = min(pace, max(1.5, minutes / 6))  # video ngắn hơn preset: vẫn đủ ~6 nhịp truyện
+            pace = max(pace, minutes / 12)           # video dài hơn preset: không quá ~12 chương (trừ khi quá dài)
+            chapters = round(minutes / pace)
+        chapters = max(chapters, math.ceil(total / 1000))   # một lần viết không quá ~1000 từ
+        chapters = min(chapters, max(1, total // 150), 40)   # mỗi chương đủ dài để có nội dung
+        if minutes <= 1.5:
+            chapters = 1
+        chapters = max(1, chapters)
+    if minutes <= 1.5:
+        kind, hook, scene, quotes, boards = "short", (8, 18), (8, 22), "0-1", "0"
+    elif minutes <= 5:
+        kind, hook, scene, quotes, boards = "brief", (20, 35), (20, 45), "0-2", "0-1"
+    elif minutes <= 20:
+        kind, hook, scene, quotes, boards = "standard", (40, 70), (40, 80), "2-4", "1-3"
+    elif minutes <= 60:
+        kind, hook, scene, quotes, boards = "long", (60, 90), (40, 80), "2-5", "2-4"
+    else:
+        kind, hook, scene, quotes, boards = "epic", (60, 90), (40, 80), "4-8", "3-6"
+    hook_avg = sum(hook) // 2
+    return {"minutes": minutes, "kind": kind, "total_words": total, "chapters": chapters, "hook": hook, "scene": scene,
+            "quotes": quotes, "boards": boards,
+            "chapter_words": max(40, int((total - hook_avg) / chapters) + (hook_avg if chapters == 1 else 0))}
+
+
+def _fmt_minutes(m: float) -> str:
+    return f"{round(m * 60)} giây" if m < 2 else f"{m:g} phút"
+
+
 def build_chapter_prompt(research: dict, outline: dict, idx: int, cfg: dict, prev_tail: str) -> str:
     ch = cfg["channel"]
     sc = cfg["script"]
     lang = LANG_NAME.get(ch["language"], ch["language"])
-    total_words = ch["target_minutes"] * ch["words_per_minute"]
-    words = int((total_words - 80) / sc["chapters"])
+    n_ch = len(outline["chapters"])
+    lp = length_plan(cfg, n_ch)
+    words = lp["chapter_words"]
+    short = lp["kind"] == "short"
+    if idx < n_ch - 1:
+        ending = "Kết chương bằng một câu treo (cliffhanger) dẫn sang chương sau."
+    elif short:
+        ending = ("Kết video bằng MỘT câu chốt hoặc câu hỏi mở thật ngắn (<= 12 từ); không tổng kết, không kêu gọi "
+                  "đăng ký dài dòng.")
+    else:
+        ending = ("Kết thúc video: tổng kết, câu hỏi còn bỏ ngỏ, mời khán giả bình luận và đăng ký kênh "
+                  + ch["name"] + ".")
     chap = outline["chapters"][idx]
-    shot = cfg["media"]["shot_seconds"]
     outline_txt = "\n".join(f"{i + 1}. {c['title']}: {c['summary']}" for i, c in enumerate(outline["chapters"]))
     return f"""<tu_lieu>
 {_corpus(research)}
@@ -429,9 +508,9 @@ Dữ kiện cần có: {'; '.join(chap['key_facts'])}
 
 Yêu cầu:
 - Tổng độ dài lời dẫn khoảng {words} từ bằng {lang}. Phong cách: {sc['style']}
-- Chia thành các "scene", mỗi scene 40-80 từ (~{shot * 3}-{shot * 5} giây đọc), một ý/một hình ảnh chủ đạo.
+- Chia thành các "scene", mỗi scene {lp['scene'][0]}-{lp['scene'][1]} từ, một ý/một hình ảnh chủ đạo{" - cắt cảnh nhanh, câu ngắn" if short else ""}.
 - {"Scene đầu tiên của chương 1 chính là hook." if idx == 0 else "Không chào hỏi lại khán giả."}
-- {"Kết chương bằng một câu treo (cliffhanger) dẫn sang chương sau." if idx < sc['chapters'] - 1 else "Kết thúc video: tổng kết, câu hỏi còn bỏ ngỏ, mời khán giả bình luận và đăng ký kênh " + ch['name'] + "."}
+- {ending}
 - entity: khi một NHÂN VẬT THẬT được nhắc tới lần đầu (nạn nhân, nghi phạm, điều tra viên, nhân chứng), điền
   name (VIẾT HOA, tên thật), role (vai trò ngắn gọn bằng ngôn ngữ lời dẫn, vd "Nghi phạm", "Tiếp viên hàng không"),
   search_query_en (tên để tìm ảnh, vd "Richard McCoy hijacker"). Màn hình sẽ hiện ảnh + thẻ tên người đó ngay lúc ấy.
@@ -439,8 +518,8 @@ Yêu cầu:
 - visual_type "quote": khi lời dẫn trích NGUYÊN VĂN một câu nói/ghi chú có thật (nhân chứng, nghi phạm, lá thư),
   đặt câu đó vào on_screen_text (ngắn, <= 25 từ) -> hiện thẻ trích dẫn gõ từng chữ VÀ được đọc bằng giọng riêng của
   nhân vật ngay sau lời dẫn. Vì vậy narration chỉ dẫn vào (vd "Hắn nghiêng người, thì thầm:") và KHÔNG lặp lại câu
-  trích dẫn. Điền entity.name là người nói câu đó. Dùng 2-5 lần/video.
-- visual_type "board": cảnh tổng kết/đặt câu hỏi -> bảng điều tra ghim nhiều ảnh nối dây đỏ (dùng 2-4 lần/video).
+  trích dẫn. Điền entity.name là người nói câu đó. Dùng {lp['quotes']} lần/video.
+- visual_type "board": cảnh tổng kết/đặt câu hỏi -> bảng điều tra ghim nhiều ảnh nối dây đỏ (dùng {lp['boards']} lần/video).
 - on_screen_text: chữ hiện trên màn hình nếu cần (vd "Boston, 1962" hoặc tên nhân vật), để "" nếu không cần.
 - search_queries_en: 3 cụm từ TIẾNG ANH ngắn (2-5 từ) để tìm ảnh/video tư liệu phù hợp trên Wikimedia/Pexels/LoC
   (vd "1960s police car", "old newspaper headline murder", "foggy forest night"). Cụm đầu cụ thể (tên người/địa danh nếu có ảnh lịch sử), các cụm sau chung chung hơn.
@@ -604,14 +683,15 @@ def manual_prompt_text(project: Project, cfg: dict) -> str:
     if not research:
         raise SystemExit("Chưa có research.json - chạy bước Tư liệu trước.")
     ch = cfg["channel"]
-    total_words = ch["target_minutes"] * ch["words_per_minute"]
+    lp = length_plan(cfg)
+    total_words = lp["total_words"]
     example = json.dumps(MANUAL_SCENE_EXAMPLE, ensure_ascii=False)
     return system_prompt(cfg) + "\n" + build_outline_prompt(research, cfg) + f"""
 
 {allowed_visuals(cfg)}
 {STORYBOARD_RULES}
 
-SAU ĐÓ viết luôn TOÀN BỘ kịch bản (~{total_words} từ lời đọc, {cfg["script"].get("chapters", 6)} chương) và trả về
+SAU ĐÓ viết luôn TOÀN BỘ kịch bản (~{total_words} từ lời đọc, {lp['chapters']} chương) và trả về
 MỘT khối JSON duy nhất (không giải thích gì thêm) theo cấu trúc:
 {{"title": "...", "title_line1": "dòng nhỏ", "title_line2": "TIÊU ĐỀ LỚN", "youtube_titles": ["...", "..."],
   "thumbnail_text": "...", "hook": "...", "description": "...", "tags": ["..."], "sources_used": ["..."],
