@@ -26,7 +26,7 @@ if hasattr(sys.stdout, "reconfigure"):
 
 import json  # noqa: E402
 
-from core.util import ROOT, Project, list_presets, load_config, log, slugify  # noqa: E402
+from core.util import ROOT, Project, list_presets, apply_project, load_config, log, slugify  # noqa: E402
 
 
 def cmd_presets(a, cfg):
@@ -311,7 +311,9 @@ def main():
     s.add_argument("--notes", nargs="*", help="file ghi chú .txt/.md")
     s.add_argument("--reference", nargs="*", help="transcript video khác (.txt) - chỉ làm tham khảo sự kiện")
     s.add_argument("--audience", help="đối tượng xem, vd 'người 18-35 tuổi, chưa biết gì về chủ đề'")
-    s.add_argument("--minutes", type=int, help="thời lượng mong muốn (mặc định theo preset, video dài 8-12 phút)")
+    s.add_argument("--minutes", type=float,
+                   help="thời lượng mong muốn, từ 0.5 (Shorts) tới 180 phút; số chương và nhịp kể tự chỉnh theo")
+    s.add_argument("--aspect", choices=["16:9", "9:16", "1:1", "4:5"], help="khung hình (9:16 = video dọc Shorts/Reels/TikTok)")
     s.add_argument("--language", choices=["vi", "en"])
     s.add_argument("--country", help="(tài chính/nhà ở) quốc gia, vd 'Hoa Kỳ'")
     s.add_argument("--currency", help="(tài chính/nhà ở) đơn vị tiền tệ, vd USD")
@@ -481,7 +483,7 @@ def main():
     meta = json.loads(meta_p.read_text("utf-8")) if meta_p and meta_p.exists() else {}
     if getattr(a, "cmd", "") == "new":  # đầu vào của video lưu vào project.json
         meta.setdefault("project", {})
-        for k in ("audience", "minutes", "country", "currency", "data_date", "story_type", "language", "brand"):
+        for k in ("audience", "minutes", "aspect", "country", "currency", "data_date", "story_type", "language", "brand"):
             v = getattr(a, k, None)
             if v not in (None, ""):
                 meta["project"][k] = v
@@ -491,15 +493,7 @@ def main():
         meta_p.parent.mkdir(parents=True, exist_ok=True)
         meta_p.write_text(json.dumps(meta, ensure_ascii=False, indent=1), "utf-8")
     cfg = load_config(a.config, preset)
-    pj = meta.get("project", {})
-    if pj:
-        cfg["project"] = {**cfg.get("project", {}), **pj}
-        if pj.get("minutes"):
-            cfg["channel"]["target_minutes"] = int(pj["minutes"])
-        if pj.get("language"):
-            cfg["channel"]["language"] = pj["language"]
-        if pj.get("brand"):
-            cfg["render"]["brand"] = pj["brand"]
+    apply_project(cfg, meta.get("project", {}))
     if preset:
         log(f"Preset: {preset}")
     a.fn(a, cfg)

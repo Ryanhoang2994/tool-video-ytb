@@ -61,6 +61,44 @@ def load_config(path: str | Path | None = None, preset: str | None = None) -> di
     return cfg
 
 
+# tốc độ đọc đo từ video đã dựng (đã gồm khoảng nghỉ giữa các cảnh)
+WPM_DEFAULT = {"en": 160, "vi": 170}
+ASPECTS = {"16:9": (1920, 1080), "9:16": (1080, 1920), "1:1": (1080, 1080), "4:5": (1080, 1350)}
+
+
+def resolve_wpm(cfg: dict) -> int:
+    """channel.words_per_minute: số | "auto" | {en: 160, vi: 170}."""
+    lang = cfg["channel"].get("language", "en")
+    v = cfg["channel"].get("words_per_minute", "auto")
+    if isinstance(v, dict):
+        v = v.get(lang, "auto")
+    try:
+        v = float(v)
+    except (TypeError, ValueError):
+        v = 0
+    return int(v) if v > 0 else WPM_DEFAULT.get(lang, 160)
+
+
+def apply_project(cfg: dict, pj: dict | None) -> dict:
+    """Ghi các lựa chọn của từng video (project.json) đè lên cấu hình: thời lượng, ngôn ngữ, khung hình..."""
+    ch = cfg["channel"]
+    ch["base_minutes"] = float(ch.get("target_minutes") or 10)  # thời lượng gốc của preset (để giữ nhịp chương)
+    pj = pj or {}
+    if pj:
+        cfg["project"] = {**cfg.get("project", {}), **pj}
+        if pj.get("minutes"):
+            m = float(pj["minutes"])
+            ch["target_minutes"] = int(m) if m == int(m) else m
+        if pj.get("language"):
+            ch["language"] = pj["language"]
+        if pj.get("brand"):
+            cfg["render"]["brand"] = pj["brand"]
+        if pj.get("aspect") in ASPECTS:
+            cfg["render"]["width"], cfg["render"]["height"] = ASPECTS[pj["aspect"]]
+    ch["words_per_minute"] = resolve_wpm(cfg)
+    return cfg
+
+
 def slugify(text: str, maxlen: int = 60) -> str:
     text = unicodedata.normalize("NFKD", text.replace("đ", "d").replace("Đ", "D"))
     text = text.encode("ascii", "ignore").decode()
