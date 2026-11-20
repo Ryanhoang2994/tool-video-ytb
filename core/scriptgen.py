@@ -173,7 +173,7 @@ STORYBOARD_RULES = """STORYBOARD - mỗi scene điền đủ:
   dread (mọi thể loại - dồn hồi hộp suốt cảnh: hình tối dần, viền đen khép lại, nhịp tim nhanh dần, tiếng trầm rền).
   Riêng truyện kinh dị / chuyện ma / hư cấu (KHÔNG dùng cho sự kiện có nạn nhân thật):
   jumpscare (cú hù doạ: lặng nửa giây rồi chớp + camera lao vào + tiếng rít; đặt cụm từ gây giật mình vào emphasis
-  để cú hù rơi ĐÚNG chữ đó), flicker (đèn chập chờn, tiếng điện rè).
+  để cú hù rơi ĐÚNG chữ đó; tool tự cho một bóng ma hiện ra trong tích tắc), flicker (đèn chập chờn, tiếng điện rè).
   emphasis: 1-2 cụm từ NGUYÊN VĂN trong narration cần nhấn (con số gây sốc, tên hung thủ, chi tiết đắt giá) -> đúng
   lúc đọc tới: camera giật vào, "boom", chữ đập ra màn hình. Không lạm dụng: tối đa 1 cảnh nhấn / 3-4 cảnh.
   pause_after: giây im lặng sau câu chốt để người xem thấm (0 bình thường, 0.8-1.5 sau câu đắt giá).

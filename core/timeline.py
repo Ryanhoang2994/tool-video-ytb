@@ -210,6 +210,7 @@ def build_timeline(project: Project, cfg: dict) -> dict:
                           "mood": s.get("mood") or "",
                           "music": s.get("music") or fxmod.FX_MUSIC.get(fxk) or mstate.get("music", ""),
                           "fx": fxk, "accents": acc,
+                          "apparition": fxmod.apparition_kind(s) if fxk == "jumpscare" else "",
                           "emph": fxmod.phrases(s, pts) if cfg.get("edit", {}).get("emphasis_text", True) else [],
                           "anchors": pts,
                           "overlay": pending,

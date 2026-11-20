@@ -693,3 +693,107 @@ def rent_vs_buy(figures: list[dict], out: Path, title: str = "", W: int = 2880, 
     _unverified_note(d, [f for v in sides.values() for f in v], W, H, (30, 30, 30))
     base.save(out, quality=92)
     return out
+
+
+# ---------- Bóng ma vẽ bằng code cho cú hù doạ (không dùng ảnh người thật, không máu me) ----------
+
+def apparition(kind: str, out: Path, W: int, H: int, seed: int = 0) -> Path:
+    """Hình hiện ra trong tích tắc ở cú jumpscare: face (mặt trắng bệch hốc mắt đen), figure (bóng người cao gầy,
+    mắt sáng), eyes (đôi mắt trong bóng tối), hand (bàn tay trắng vươn tới). PNG nền trong suốt, cỡ nửa khung hình."""
+    rnd = random.Random(seed * 7919 + len(kind))
+    w, h = max(W // 2, 320), max(H // 2, 320)
+    u = min(w, h)
+    cx, cy = w // 2, h // 2
+    img = Image.new("RGBA", (w, h), (0, 0, 0, 0))
+    d = ImageDraw.Draw(img)
+
+    def ell(x, y, rx, ry, fill):
+        d.ellipse([x - rx, y - ry, x + rx, y + ry], fill=fill)
+
+    if kind == "figure":
+        body = (4, 4, 6, 235)
+        hw = u * 0.085
+        ell(cx, cy - u * 0.30, hw * 0.8, hw * 1.05, body)                                   # đầu nhỏ
+        d.polygon([(cx - hw * 1.5, cy - u * 0.19), (cx + hw * 1.5, cy - u * 0.19),
+                   (cx + hw * 1.15, h), (cx - hw * 1.15, h)], fill=body)                    # thân dài
+        for sgn in (-1, 1):                                                                # tay dài quá gối
+            d.line([(cx + sgn * hw * 1.4, cy - u * 0.17), (cx + sgn * hw * 2.5, cy + u * 0.16),
+                    (cx + sgn * hw * 2.1, cy + u * 0.42)], fill=body, width=max(3, int(hw * 0.55)))
+        img = img.filter(ImageFilter.GaussianBlur(u * 0.006))
+        d = ImageDraw.Draw(img)
+        for sgn in (-1, 1):
+            ell(cx + sgn * hw * 0.34, cy - u * 0.305, hw * 0.13, hw * 0.13, (255, 255, 255, 255))
+    elif kind == "eyes":
+        glow = Image.new("RGBA", (w, h), (0, 0, 0, 0))
+        g = ImageDraw.Draw(glow)
+        g.ellipse([cx - u * 0.42, cy - u * 0.3, cx + u * 0.42, cy + u * 0.3], fill=(0, 0, 0, 215))
+        glow = glow.filter(ImageFilter.GaussianBlur(u * 0.07))
+        img = Image.alpha_composite(img, glow)
+        d = ImageDraw.Draw(img)
+        for sgn in (-1, 1):
+            ex = cx + sgn * u * 0.13
+            ell(ex, cy, u * 0.075, u * 0.05, (236, 232, 222, 255))
+            ell(ex, cy, u * 0.012, u * 0.012, (0, 0, 0, 255))
+            for k in range(7):  # mạch máu mảnh
+                a = rnd.uniform(0, 6.28)
+                d.line([(ex + u * 0.07 * rnd.uniform(0.5, 1) * (1 if k % 2 else -1), cy + u * 0.03 * rnd.uniform(-1, 1)),
+                        (ex, cy)], fill=(150, 30, 30, 120), width=1)
+    elif kind == "hand":
+        skin = (226, 222, 214, 250)
+        px, py = cx, cy + u * 0.16
+        ell(px, py, u * 0.13, u * 0.15, skin)
+        for k, (ang, ln) in enumerate([(-0.95, 0.20), (-0.36, 0.33), (-0.04, 0.37), (0.28, 0.34), (0.62, 0.26)]):
+            import math
+            x0, y0 = px + math.sin(ang) * u * 0.10, py - math.cos(ang) * u * 0.10
+            x1, y1 = px + math.sin(ang * 1.15) * u * (0.10 + ln), py - math.cos(ang * 1.15) * u * (0.10 + ln)
+            d.line([(x0, y0), (x1, y1)], fill=skin, width=max(4, int(u * 0.045)))
+            ell(x1, y1, u * 0.024, u * 0.024, skin)
+        d.polygon([(px - u * 0.10, py + u * 0.10), (px + u * 0.10, py + u * 0.10),
+                   (px + u * 0.085, h), (px - u * 0.085, h)], fill=skin)                   # cổ tay
+        sh = Image.new("RGBA", (w, h), (0, 0, 0, 0))
+        s2 = ImageDraw.Draw(sh)
+        for _ in range(26):  # vết bẩn tối trên da
+            x, y = px + rnd.uniform(-0.2, 0.2) * u, py + rnd.uniform(-0.45, 0.3) * u
+            r = rnd.uniform(0.01, 0.04) * u
+            s2.ellipse([x - r, y - r, x + r, y + r], fill=(20, 20, 26, rnd.randint(30, 90)))
+        sh = sh.filter(ImageFilter.GaussianBlur(u * 0.012))
+        sh.putalpha(Image.composite(sh.getchannel("A"), Image.new("L", (w, h), 0), img.getchannel("A")))
+        img = Image.alpha_composite(img, sh).filter(ImageFilter.GaussianBlur(u * 0.004))
+    else:  # face
+        skin = (228, 224, 216, 255)
+        fw, fh = u * 0.21, u * 0.33
+        hair = (6, 6, 8, 245)
+        ell(cx, cy - fh * 0.25, fw * 1.25, fh * 1.05, hair)                                 # tóc phủ
+        d.polygon([(cx - fw * 1.25, cy - fh * 0.2), (cx + fw * 1.25, cy - fh * 0.2),
+                   (cx + fw * 1.05, h), (cx - fw * 1.05, h)], fill=hair)
+        ell(cx, cy, fw, fh, skin)                                                          # mặt dài trắng bệch
+        for sgn in (-1, 1):                                                                # hốc mắt đen, to, lệch
+            ex, ey = cx + sgn * fw * 0.43, cy - fh * 0.24 + rnd.uniform(-1, 1) * fh * 0.02
+            ell(ex, ey, fw * 0.27, fh * 0.2, (0, 0, 0, 255))
+            ell(ex, ey + fh * 0.16, fw * 0.16, fh * 0.2, (40, 38, 44, 110))                # quầng chảy xuống
+            ell(ex + sgn * fw * 0.02, ey, fw * 0.035, fw * 0.035, (255, 255, 255, 255))    # con ngươi li ti
+        ell(cx, cy + fh * 0.48, fw * 0.3, fh * 0.34, (0, 0, 0, 255))                       # miệng há dài
+        for sgn in (-1, 1):
+            d.line([(cx + sgn * fw * 0.07, cy + fh * 0.04), (cx + sgn * fw * 0.05, cy + fh * 0.1)],
+                   fill=(60, 58, 62, 255), width=max(2, int(u * 0.006)))                   # hai khe mũi
+        for _ in range(14):                                                                # tóc rũ che mặt
+            x = cx + rnd.uniform(-1.1, 1.1) * fw
+            d.line([(x, cy - fh * 1.2), (x + rnd.uniform(-0.15, 0.15) * fw, cy + rnd.uniform(-0.2, 0.9) * fh)],
+                   fill=(6, 6, 8, 230), width=max(2, int(u * rnd.uniform(0.004, 0.012))))
+        for _ in range(9):                                                                 # vết nứt xám trên da
+            x, y = cx + rnd.uniform(-0.8, 0.8) * fw, cy + rnd.uniform(-0.7, 0.8) * fh
+            pts = [(x, y)]
+            for _k in range(4):
+                x, y = x + rnd.uniform(-0.12, 0.12) * fw, y + rnd.uniform(0.02, 0.12) * fh
+                pts.append((x, y))
+            d.line(pts, fill=(70, 66, 74, 150), width=1)
+        img = img.filter(ImageFilter.GaussianBlur(u * 0.004))
+    # hạt nhiễu + mép mờ để hoà vào khung hình tối
+    a = img.getchannel("A").filter(ImageFilter.GaussianBlur(u * 0.01))
+    noise = Image.effect_noise((w, h), 26).convert("L")
+    rgb = Image.blend(img.convert("RGB"), Image.merge("RGB", [noise] * 3), 0.10)
+    img = rgb.convert("RGBA")
+    img.putalpha(a)
+    out.parent.mkdir(parents=True, exist_ok=True)
+    img.save(out)
+    return out

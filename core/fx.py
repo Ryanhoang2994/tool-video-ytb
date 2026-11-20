@@ -246,6 +246,21 @@ def shake_amount(fx: str) -> float:
     return {"shudder": 0.012, "action": 0.009, "impact": 0.006, "reveal": 0.0, "jumpscare": 0.03}.get(fx, 0.003)
 
 
+def apparition_kind(scene: dict) -> str:
+    """Hình hiện ra ở cú hù doạ: theo scene["apparition"] (face|figure|eyes|hand|none), không có thì đoán theo lời."""
+    k = (scene.get("apparition") or "auto").lower()
+    if k in ("face", "figure", "eyes", "hand", "none"):
+        return k
+    t = scene.get("narration", "").lower()
+    if re.search(r"bàn tay|ngón tay|nắm lấy|chộp|túm|\bhand\b|fingers|grabbed", t):
+        return "hand"
+    if re.search(r"đôi mắt|ánh mắt|nhìn chằm chằm|\beyes\b|staring", t):
+        return "eyes"
+    if re.search(r"bóng (người|đen|trắng)|đứng (ở|ngay|sau|cuối)|dáng người|figure|shadow|standing|silhouette", t):
+        return "figure"
+    return "face"
+
+
 def punch_amount(fx: str) -> float:
     """Camera giật vào bao nhiêu ở mỗi nhịp nhấn (jumpscare: lao thẳng vào mặt)."""
     return {"jumpscare": 0.34, "shudder": 0.09}.get(fx, 0.075)

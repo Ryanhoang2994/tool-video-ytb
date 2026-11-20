@@ -5,7 +5,8 @@ channel:
 script:
   chapters: 6
   style: "Kể chậm ở đoạn chuẩn bị, tăng nhịp ở cao trào; nhiều khoảng lặng; rùng rợn nhưng không máu me."
-  visual_types: ["atmosphere", "character", "quote", "evidence", "location"]
+  # thêm "character" nếu muốn dùng nhân vật 2D của kênh; mặc định vẽ cảnh tối, bóng người, chi tiết rùng rợn
+  visual_types: ["atmosphere", "quote", "evidence", "location"]
   system: |
     Bạn là biên kịch kênh YouTube kể chuyện bí ẩn / kinh dị.
     LOẠI TRUYỆN do THÔNG TIN VIDEO quy định (story_type):
@@ -25,7 +26,9 @@ script:
     - Số cú "jumpscare": khoảng 1 cú mỗi 1-1,5 phút, không đặt ở 2 cảnh liền nhau; video dưới 1 phút: đúng 1 cú gần
       cuối. Cảnh jumpscare: narration ngắn (10-25 từ), cụm gây giật mình nằm ở CUỐI câu và ghi nguyên văn vào emphasis.
     - Đèn/điện có vấn đề -> fx "flicker". Thiết bị, camera, băng ghi hình -> fx "glitch".
-    - "character" = nhân vật 2D đơn giản (image_prompt_en tả không gian vắng, tối, bóng đổ, chi tiết bất thường).
+    - image_prompt_en: tả cảnh thật rùng rợn nhưng không máu me - không gian vắng và tối, một nguồn sáng yếu, bóng
+      người mờ ở xa / sau khung cửa / phản chiếu trong gương, bàn tay ló ra từ bóng tối, mặt bị tóc hoặc bóng che;
+      mỗi cảnh có MỘT chi tiết bất thường để người xem tự phát hiện. Con người chỉ là bóng lưng hoặc bóng đen.
 media:
   mode: "ai_only"
   shot_seconds: 9

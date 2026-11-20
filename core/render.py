@@ -458,6 +458,20 @@ def render_item(item: dict, out: Path, cfg: dict, plates: Path, labels: Path) ->
              f"fade=t=out:st={min(span - 0.2, at + 1.4):.2f}:d=0.25:alpha=1,"
              f"scale=w='iw*{S}':h='ih*{S}':eval=frame",
              f"overlay=x='(W-overlay_w)/2':y='(H-overlay_h)/2':enable='gte(t,{at:.2f})':eof_action=pass")
+    ap_ = item.get("apparition") or ""
+    if ap_ not in ("", "none") and item.get("accents") and ed.get("apparition", True):  # bóng ma lao vào ở cú hù doạ
+        from . import graphics
+
+        a_ = item["accents"][0]
+        png = labels / f"appar_{ap_}_{W}x{H}_{int(item['start']) % 5}.png"
+        if not png.exists():
+            graphics.apparition(ap_, png, W, H, int(item["start"]) % 5)
+        ai = inp("-loop", "1", "-framerate", fps, "-t", f"{span:.2f}", "-i", png)
+        S = f"(1.5+1.5*min(1,max(0,(t-{a_:.2f})/0.5)))"
+        over(f"[{ai}:v]format=rgba,fade=t=in:st={a_:.2f}:d=0.03:alpha=1,"
+             f"fade=t=out:st={a_ + 0.42:.2f}:d=0.16:alpha=1,scale=w='iw*{S}':h='ih*{S}':eval=frame",
+             f"overlay=x='(W-overlay_w)/2':y='(H-overlay_h)/2':enable='between(t,{a_:.2f},{a_ + 0.6:.2f})':"
+             f"eof_action=pass")
     ov_ = item.get("overlay")
     if ov_:  # tên video / tên chương hiện đè, lời kể vẫn chạy
         from . import fx as fxmod
@@ -552,7 +566,7 @@ def render_video(project: Project, cfg: dict, workers: int = 0, preview: bool = 
     for it in tl["items"]:
         key = json.dumps([RENDER_VERSION, it["shots"], it.get("label"), it.get("keywords"), it["type"], rc.get("look"),
                           it.get("hud"), it.get("hud_prev"), it.get("mood"), STYLE["story_caps"],
-                          it.get("fx"), it.get("accents"), it.get("emph"), it.get("overlay"),
+                          it.get("fx"), it.get("accents"), it.get("emph"), it.get("overlay"), it.get("apparition"),
                           rc["width"], cfg.get("edit", {}), rc.get("brand"),
                           round(it["start"] * fps)], sort_keys=True)
         out = shots_dir / f"item_{hashlib.md5(key.encode()).hexdigest()[:14]}.mp4"
