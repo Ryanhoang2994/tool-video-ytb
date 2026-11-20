@@ -94,21 +94,17 @@ def _gen_flash() -> np.ndarray:
 
 
 def _gen_riser() -> np.ndarray:
+    """Tiếng dâng lên trước cao trào: chủ yếu là âm trầm trượt lên, chỉ pha rất ít tiếng gió (không rè, không xì)."""
     n = int(SR * 2.4)
     t = np.arange(n) / SR
-    rng = np.random.default_rng(4)
-    noise = rng.standard_normal(n).astype(np.float32)
-    env = (t / t[-1]) ** 2.2
-    a = 0.01 + 0.25 * (t / t[-1]) ** 2  # mở dần bộ lọc -> tiếng "vút" tăng dần
-    y = np.empty_like(noise)
-    acc = 0.0
-    for i, v in enumerate(noise):
-        acc += a[i] * (v - acc)
-        y[i] = acc
-    tone = np.sin(2 * np.pi * np.cumsum(80 + 220 * (t / t[-1]) ** 2) / SR) * 0.25
-    out = (y * 2.5 + tone) * env
+    p = t / t[-1]
+    env = p ** 2.0
+    ph = 2 * np.pi * np.cumsum(70 + 260 * p ** 2) / SR
+    tone = np.sin(ph) * 0.6 + np.sin(ph * 1.5 + 0.7) * 0.25 + np.sin(ph * 2.01) * 0.12
+    air = _smooth(_smooth(np.random.default_rng(4).standard_normal(n).astype(np.float32), 90), 45) * 1.6
+    out = (tone + air * p) * env
     out[-int(SR * 0.03):] *= np.linspace(1, 0, int(SR * 0.03))
-    return out
+    return out.astype(np.float32)
 
 
 def _gen_rain(seconds: float = 20.0) -> np.ndarray:
@@ -154,10 +150,16 @@ def _gen_ambience(kind: str, seconds: float = 16.0) -> np.ndarray:
             x[pos:pos + L] += np.sin(2 * np.pi * (f0 + 2500 * tt) * tt) * np.exp(-tt * 25) * 0.25
     elif kind == "wind":
         x = _smooth(noise, 30) * 3 * (0.4 + 0.6 * (0.5 + 0.5 * np.sin(2 * np.pi * 0.13 * t)) ** 2)
-    elif kind == "night":  # gió nhẹ + dế
-        x = _smooth(noise, 40) * 1.2
-        chirp = (np.sin(2 * np.pi * 4300 * t) * (np.sin(2 * np.pi * 28 * t) > 0.3)) * 0.08
-        x += chirp * (np.sin(2 * np.pi * 0.7 * t) > 0)
+    elif kind == "night":  # đêm vắng: gió trầm rất khẽ, thỉnh thoảng một chùm dế xa (êm, không rè)
+        x = _smooth(_smooth(noise, 260), 130) * 9 * (0.55 + 0.45 * np.sin(2 * np.pi * 0.07 * t) ** 2)
+        pos = 1.5
+        while pos < seconds - 1.5:
+            for k in range(int(rng.integers(2, 5))):   # mỗi chùm 2-4 tiếng "ríc" ngắn, bo tròn hai đầu
+                L = int(SR * 0.05)
+                tt = np.arange(L) / SR
+                a = int((pos + k * 0.11) * SR)
+                x[a:a + L] += np.sin(2 * np.pi * 3900 * tt) * np.sin(np.pi * tt / tt[-1]) ** 2 * 0.012
+            pos += float(rng.uniform(2.5, 5.0))
     elif kind in ("office", "cafe", "city"):
         x = _smooth(noise, 200) * 4 + _smooth(noise, 12) * (0.3 if kind == "cafe" else 0.15)
         if kind == "cafe":  # tiếng ly tách
@@ -301,7 +303,7 @@ def tension_bed(seconds: float) -> np.ndarray:
     p = t / t[-1]
     drone = sum(np.sin(2 * np.pi * f * t + np.sin(2 * np.pi * 0.31 * t) * 1.5) for f in (41.2, 43.6, 61.7)) / 3
     drone *= (0.25 + 0.75 * p ** 1.6) * 0.5
-    hiss = _smooth(np.random.default_rng(3).standard_normal(n).astype(np.float32), 6) * p ** 3 * 0.12
+    hiss = _smooth(_smooth(np.random.default_rng(3).standard_normal(n).astype(np.float32), 80), 40) * p ** 3 * 0.5
     x = (drone + hiss).astype(np.float32)
     hb = np.sin(2 * np.pi * 52 * np.arange(int(SR * 0.16)) / SR) * np.exp(-np.arange(int(SR * 0.16)) / SR * 22)
     pos = 0.3
@@ -331,6 +333,9 @@ def _gen_glitch() -> np.ndarray:
     return out
 
 
+GEN_REV = {"night": 2, "riser": 2}  # đổi cách tạo âm nào thì tăng số ở đây để máy đã cài tự tạo lại
+
+
 def load(name: str) -> np.ndarray:
     """Âm thanh SFX: ưu tiên file của bạn ở assets/sfx/<name>.wav, không có thì tự tạo."""
     user = SFX_DIR / f"{name}.wav"
@@ -339,7 +344,7 @@ def load(name: str) -> np.ndarray:
             return _read(user)
         except Exception as e:  # noqa: BLE001
             log(f"  ! không đọc được {user}: {e}")
-    gen = GEN_DIR / f"{name}.wav"
+    gen = GEN_DIR / (f"{name}_r{GEN_REV[name]}.wav" if name in GEN_REV else f"{name}.wav")
     if not gen.exists():
         gens = {"hit": _gen_hit, "whoosh": _gen_whoosh, "flash": _gen_flash, "riser": _gen_riser,
                 "rain": _gen_rain, "heartbeat": _gen_heartbeat, "footsteps": _gen_footsteps, "door": _gen_door,
@@ -381,7 +386,7 @@ def build_sfx_track(tl: dict, cfg: dict, out: Path) -> Path | None:
            "ambience": sc.get("ambience", 0.16), "footsteps": sc.get("footsteps", 0.45), "door": sc.get("door", 0.45),
            "heartbeat": sc.get("heartbeat", 0.35), "notify": sc.get("notify", 0.4), "tick": sc.get("tick", 0.3),
            "sting": sc.get("sting", 0.6), "glitch": sc.get("glitch", 0.3), "scare": sc.get("scare", 0.95),
-           "tension": sc.get("tension", 0.5), "buzz": sc.get("buzz", 0.3)}
+           "tension": sc.get("tension", 0.5), "buzz": sc.get("buzz", 0.18)}
     AMB = ("underwater", "wind", "night", "office", "cafe", "city", "rain", "heartbeat")
     import re as _re
 
