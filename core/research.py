@@ -181,15 +181,19 @@ def run_research(project: Project, topic: str, cfg: dict, *, en_query: str = "",
         short = re.split(r"\s*[:–—]\s*", q)[0].strip()
         queries = [q] + [x for x in (short, f"{short} {years}".strip()) if x and x != q]
         got = []
-        for attempt in range(3):  # Wikipedia hay trả 429 khi chạy song song -> chờ rồi thử lại
+        waits = rc.get("wikipedia_retry_waits", [120, 300, 600, 900])  # Wikipedia hay chặn 429 nhiều phút liền
+        for attempt in range(len(waits) + 1):
             for qq in queries:
                 got = wikipedia(qq, lang, max_chars=max_chars)
                 if got:
                     break
-            if got or lang != "en":
+            if got or lang != "en" or attempt == len(waits):
                 break
-            log(f"  Wikipedia [{lang}] trống, chờ {60 * (attempt + 1)}s rồi thử lại")
-            time.sleep(60 * (attempt + 1))
+            log(f"  Wikipedia [{lang}] trống, chờ {waits[attempt]}s rồi thử lại")
+            time.sleep(waits[attempt])
+        if not got and lang == "en" and rc.get("require_wikipedia", True):
+            # không viết kịch bản khi thiếu nguồn chính; lần chạy sau sẽ thử lại
+            raise RuntimeError("Wikipedia không trả kết quả (bị chặn 429?) – chưa ghi research.json, chạy lại sau")
         sources += got
 
     n = rc.get("max_newspaper_hits", 25)
