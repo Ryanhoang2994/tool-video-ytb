@@ -64,6 +64,15 @@ voice:
     "DAN COOPER": "Thái Sơn"
   quote_gap: 0.45
   polish: true                    # làm đẹp giọng kiểu phòng thu (EQ ấm, giảm xì, nén, chút không gian)
+  # DIỄN XUẤT: mỗi cảnh đọc theo cảm xúc - thì thầm trước cú hù, chậm và căng khi dồn hồi hộp, dồn dập khi truy đuổi,
+  # trầm nặng ở kết cục, ấm khi có hi vọng. Kịch bản ghi sẵn (delivery) hoặc tool tự chọn theo hiệu ứng/ánh sáng cảnh.
+  delivery: true
+  delivery_strength: 1.0          # 0 = tắt | 0.5 nhẹ | 1 vừa | 1.5 đậm
+  # Hiệu ứng LỜI NHÂN VẬT trong cảnh trích dẫn: bộ đàm, điện thoại, băng ghi âm, vọng, giọng ma (chỉ truyện hư cấu).
+  # Tự nhận theo lời dẫn trước câu trích (vd "the captain radioed:"), hoặc chọn tay trong trang sửa cảnh.
+  voice_fx: true
+  # ElevenLabs eleven_v3: thẻ cảm xúc thêm vào đầu câu theo cách đọc (model khác không dùng thẻ)
+  elevenlabs_tags: {hushed: "[whispers]", tense: "[tense]", urgent: "[urgently]", grave: "[seriously]", warm: "[warmly]"}
   # VieNeu-TTS (pip install vieneu) - nghe thử: python studio.py voices --vieneu
   vieneu_voice: "Thiền Tâm Đức"   # giọng kể chuyện. Khác: Thanh Bình, Thái Sơn (giọng Nam), Đức Trí, Ngọc Linh (nữ)...
   vieneu_ref_wav: ""              # clone giọng của bạn: đường dẫn file mẫu 3-8 giây (vd voices/my_voice.wav)

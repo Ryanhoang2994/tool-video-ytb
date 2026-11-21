@@ -20,7 +20,9 @@ const PRESET_NAME = {
 const OPT = {
   visual_type: ["archival_photo", "location", "document", "newspaper", "map", "atmosphere", "person", "evidence", "video_broll",
     "board", "quote", "character", "diagram", "species", "chart", "insert"],
-  fx: ["auto", "none", "shudder", "action", "impact", "reveal", "glitch"],
+  fx: ["auto", "none", "shudder", "action", "impact", "reveal", "glitch", "dread", "jumpscare", "flicker"],
+  delivery: ["auto", "normal", "hushed", "tense", "urgent", "grave", "warm"],
+  voice_fx: ["auto", "none", "radio", "phone", "tape", "echo", "ghost"],
   mood: ["auto", "neutral", "night", "rain", "warm", "phone", "tense", "sad", "hopeful", "dawn"],
   music: ["", "calm", "sad", "tense", "hopeful", "dark", "light", "action", "horror", "silence"],
   camera: ["auto", "push_in", "pull_out", "pan_lr", "pan_rl", "tilt_down", "tilt_up", "punch", "snap_zoom", "float", "shake",
@@ -31,7 +33,12 @@ const OPT = {
   framing: ["auto", "wide", "closeup"],
 };
 const LABEL = {
-  fx: { auto: "tự đoán", none: "không", shudder: "rùng mình", action: "hành động", impact: "chấn động", reveal: "tiết lộ", glitch: "nhiễu" },
+  fx: { auto: "tự đoán", none: "không", shudder: "rùng mình", action: "hành động", impact: "chấn động", reveal: "tiết lộ", glitch: "nhiễu",
+    dread: "dồn hồi hộp", jumpscare: "hù doạ (chỉ truyện hư cấu)", flicker: "đèn chập chờn" },
+  delivery: { auto: "tự chọn", normal: "bình thường", hushed: "thì thầm", tense: "căng, chậm", urgent: "dồn dập",
+    grave: "trầm nặng", warm: "ấm áp" },
+  voice_fx: { auto: "tự nhận", none: "không", radio: "bộ đàm", phone: "điện thoại", tape: "băng ghi âm", echo: "vọng",
+    ghost: "giọng ma" },
   music: { "": "(giữ nhạc trước)", calm: "êm", sad: "buồn", tense: "căng thẳng", hopeful: "hi vọng", dark: "u tối", light: "nhẹ nhàng",
     action: "hành động", horror: "kinh dị", silence: "tắt nhạc" },
   mood: { auto: "tự động", neutral: "bình thường", night: "đêm", rain: "mưa", warm: "đèn ấm", phone: "ánh điện thoại", tense: "căng thẳng",
@@ -309,6 +316,8 @@ function sceneCard(s) {
         <div><label>Ánh sáng</label>${sel("mood", s.mood || "auto", OPT.mood, LABEL.mood)}</div>
         <div><label>Nhạc</label>${sel("music", s.music || "", OPT.music, LABEL.music)}</div>
         <div><label>Camera</label>${sel("camera", s.camera || "auto", OPT.camera)}</div>
+        <div><label>Cách đọc</label>${sel("delivery", s.delivery || "auto", OPT.delivery, LABEL.delivery)}</div>
+        <div><label>Giọng nhân vật (cảnh trích dẫn)</label>${sel("voice_fx", s.voice_fx || "auto", OPT.voice_fx, LABEL.voice_fx)}</div>
         <div><label>Lặng sau câu (giây)</label><input type="number" step="0.1" min="0" max="5" data-f="pause_after" value="${s.pause_after || 0}"></div>
       </div>
       <label>Cụm từ nhấn mạnh (nguyên văn trong lời đọc, cách nhau bằng dấu |)</label>

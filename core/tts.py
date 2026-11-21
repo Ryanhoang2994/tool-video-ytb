@@ -19,6 +19,8 @@ import tempfile
 import wave
 from pathlib import Path
 
+from . import fx as fxmod
+from . import voicefx
 from .util import ROOT, Project, ffprobe_duration, log, run
 
 
@@ -40,6 +42,8 @@ def _norm(src: Path, dst: Path) -> None:
 
 
 class EdgeTTS:
+    delivery_native = "rate"   # tự đổi tốc độ + cao độ khi đọc
+
     def __init__(self, vc: dict):
         import edge_tts
 
@@ -48,11 +52,15 @@ class EdgeTTS:
         self.rate = vc.get("edge_rate", "+0%")
         self.pitch = vc.get("edge_pitch", "+0Hz")
 
-    def synth(self, text: str, out: Path, voice: str | None = None) -> None:
+    def synth(self, text: str, out: Path, voice: str | None = None, delivery: dict | None = None) -> None:
         tmp = out.with_suffix(".mp3")
+        rate, pitch = self.rate, self.pitch
+        if delivery:
+            rate = voicefx.edge_rate(self.rate, delivery["rate"])
+            pitch = voicefx.edge_pitch(self.pitch, delivery["pitch"])
 
         async def go():
-            c = self.edge_tts.Communicate(text, voice or self.voice, rate=self.rate, pitch=self.pitch,
+            c = self.edge_tts.Communicate(text, voice or self.voice, rate=rate, pitch=pitch,
                                           proxy=os.getenv("HTTPS_PROXY") or os.getenv("https_proxy") or None)
             await c.save(str(tmp))
 
@@ -292,6 +300,7 @@ class GoogleTTS:
     Xác thực (1 trong 2): GOOGLE_TTS_API_KEY trong .env, hoặc chạy trên VPS Google Cloud (tự lấy quyền của máy)."""
 
     URL = "https://texttospeech.googleapis.com/v1/text:synthesize"
+    delivery_native = "rate"
 
     def __init__(self, vc: dict, lang: str):
         import requests
@@ -318,12 +327,13 @@ class GoogleTTS:
                 raise SystemExit("Google TTS: cần GOOGLE_TTS_API_KEY trong .env, hoặc chạy trên VPS Google Cloud")
             return {"Authorization": f"Bearer {tok}"}
 
-    def synth(self, text: str, out: Path, voice: str | None = None) -> None:
+    def synth(self, text: str, out: Path, voice: str | None = None, delivery: dict | None = None) -> None:
         import base64
         import time
 
+        rate = self.rate * (1 + (delivery or {}).get("rate", 0) / 100)
         body = {"input": {"text": text}, "voice": {"languageCode": self.lang, "name": voice or self.voice},
-                "audioConfig": {"audioEncoding": "LINEAR16", "sampleRateHertz": 24000, "speakingRate": self.rate}}
+                "audioConfig": {"audioEncoding": "LINEAR16", "sampleRateHertz": 24000, "speakingRate": round(rate, 3)}}
         for i in range(4):
             r = self.requests.post(self.URL, json=body, headers=self._headers(), timeout=120)
             if r.status_code == 429 or r.status_code >= 500:
@@ -340,7 +350,10 @@ class GoogleTTS:
 
 class ElevenLabsTTS:
     """ElevenLabs API. Tiếng Việt: model eleven_v3 (tự nhiên, biểu cảm nhất) hoặc eleven_flash_v2_5 (rẻ, nhanh).
-    Cần ELEVENLABS_API_KEY trong .env; voice_id lấy trong Voice Library (có thể là giọng bạn clone)."""
+    Cần ELEVENLABS_API_KEY trong .env; voice_id lấy trong Voice Library (có thể là giọng bạn clone).
+    eleven_v3 nhận thẻ cảm xúc đặt trước câu ([whispers], [seriously]...) -> tool tự thêm theo cách đọc của cảnh."""
+
+    delivery_native = "tags"   # thẻ cảm xúc lo phần diễn; tốc độ vẫn chỉnh sau khi đọc
 
     def __init__(self, vc: dict, lang: str):
         import requests
@@ -358,9 +371,12 @@ class ElevenLabsTTS:
                          "similarity_boost": vc.get("elevenlabs_similarity", 0.75),
                          "style": vc.get("elevenlabs_style", 0.15), "use_speaker_boost": True}
 
-    def synth(self, text: str, out: Path, voice: str | None = None) -> None:
+    def synth(self, text: str, out: Path, voice: str | None = None, delivery: dict | None = None) -> None:
         import time
 
+        tag = (delivery or {}).get("tag", "")
+        if tag and self.model.startswith("eleven_v3"):  # model khác sẽ đọc to cả thẻ -> chỉ dùng với v3
+            text = f"{tag} {text}"
         url = f"https://api.elevenlabs.io/v1/text-to-speech/{voice or self.voice_id}?output_format=mp3_44100_128"
         body = {"text": text, "model_id": self.model, "voice_settings": self.settings}
         if self.lang:
@@ -433,48 +449,100 @@ def make_voice(project: Project, cfg: dict, redo: set[str] | None = None) -> dic
         raise SystemExit("Kịch bản chưa có cảnh nào - chạy lại bước Kịch bản (chủ đề nên cụ thể hơn).")
     lang = cfg["channel"].get("language", "vi")
 
-    def one(i: int, s: dict) -> None:
-        out = project.path("audio", f"{s['id']}.wav")
-        log(f"[{i}/{len(scenes)}] đọc {s['id']} ({len(s['narration'].split())} từ)")
-        eng.synth(s["narration"], out)
-        # Dàn giọng: câu trích dẫn (cảnh "quote") đọc bằng giọng riêng của nhân vật ngay sau lời dẫn
+    vc = cfg["voice"]
+    gap = vc.get("quote_gap", 0.45)
+
+    def say(text: str, out: Path, voice=None, delivery: str = "normal") -> None:
+        """Đọc 1 đoạn với cách đọc của cảnh: engine tự làm được thì để engine làm, còn lại chỉnh sau."""
+        prm = voicefx.params(delivery, vc)
+        native = getattr(eng, "delivery_native", "")
+        kw = {"voice": voice} if voice else {}
+        if native and delivery != "normal":
+            kw["delivery"] = prm
+        eng.synth(text, out, **kw)
+        voicefx.post_delivery(out, prm, tempo=native != "rate")
+
+    def plan(s: dict) -> dict:
+        """Cách đọc + giọng nhân vật + hiệu ứng giọng của cảnh."""
+        fxk = s.get("fx") or "auto"
+        if fxk == "auto":
+            fxk = fxmod.detect(s, cfg)
+        delivery = voicefx.auto_delivery(s, fxk, cfg)
         who = ((s.get("entity") or {}).get("name") or "").strip().upper()
         cvoice = cast.get(who)
         if cvoice and lang == "en" and isinstance(eng, EdgeTTS) and not str(cvoice).startswith("en-"):
             cvoice = None  # giọng nhân vật cài cho bản tiếng Việt (VieNeu) không dùng được cho tiếng Anh
-        quote = (s.get("on_screen_text") or "").strip()
-        already = quote and quote.lower().strip('"“”.') in s["narration"].lower()
-        if s.get("visual_type") == "quote" and quote and not already:
-            qwav = out.with_name(out.stem + "_quote.wav")
+        quote = (s.get("on_screen_text") or "").strip() if s.get("visual_type") == "quote" else ""
+        parts = voicefx.split_quote(s["narration"], quote) if quote else None
+        lead = parts[0] if parts else s["narration"]
+        vfx = voicefx.auto_voice_fx(s, fxk, cfg, lead) if quote else "none"
+        return {"delivery": delivery, "cvoice": cvoice, "quote": quote, "parts": parts, "vfx": vfx, "who": who,
+                "sig": f"{delivery}|{vfx}|{cvoice or ''}"}
+
+    def one(i: int, s: dict, pl: dict) -> None:
+        out = project.path("audio", f"{s['id']}.wav")
+        log(f"[{i}/{len(scenes)}] đọc {s['id']} ({len(s['narration'].split())} từ)"
+            + (f" · cách đọc {pl['delivery']}" if pl["delivery"] != "normal" else "")
+            + (f" · giọng nhân vật {pl['vfx']}" if pl["vfx"] != "none" else ""))
+        cvoice, vfx, parts, quote = pl["cvoice"], pl["vfx"], pl["parts"], pl["quote"]
+
+        def say_quote(text: str, qwav: Path) -> None:
             try:
-                if cvoice:
-                    eng.synth(quote, qwav, voice=cvoice)
-                else:
-                    eng.synth(quote, qwav)
-                _concat_with_gap(out, qwav, cfg["voice"].get("quote_gap", 0.45))
-                log(f"    + trích dẫn bằng giọng {'riêng của ' + who if cvoice else 'người dẫn chuyện'}")
+                say(text, qwav, voice=cvoice, delivery=pl["delivery"] if not cvoice else "normal")
             except TypeError:
                 log("    ! engine này chưa hỗ trợ đổi giọng theo nhân vật")
-            qwav.unlink(missing_ok=True)
-        timing[s["id"]] = {"duration": ffprobe_duration(out), "text": s["narration"]}
+                say(text, qwav, delivery=pl["delivery"])
+            voicefx.apply_fx(qwav, vfx)
+
+        if parts and (cvoice or vfx != "none"):
+            # câu trích nằm trong lời dẫn: đọc tách [dẫn] [nhân vật nói] [dẫn] rồi ghép lại
+            before, mid, after = parts
+            segs = []
+            for k, (txt, is_q) in enumerate(((before, False), (mid, True), (after, False))):
+                if not txt.strip(" .,:;-—"):
+                    continue
+                w = out.with_name(f"{out.stem}_p{k}.wav")
+                (say_quote(txt, w) if is_q else say(txt, w, delivery=pl["delivery"]))
+                segs.append(w)
+            segs[0].replace(out)
+            for w in segs[1:]:
+                _concat_with_gap(out, w, 0.3)
+                w.unlink(missing_ok=True)
+            log(f"    + lời {pl['who'] or 'nhân vật'} đọc tách riêng"
+                + (f" bằng giọng riêng" if cvoice else "") + (f", hiệu ứng {vfx}" if vfx != "none" else ""))
+        else:
+            say(s["narration"], out, delivery=pl["delivery"])
+            already = quote and quote.lower().strip('"“”.') in s["narration"].lower()
+            if quote and not already:
+                # Dàn giọng: câu trích dẫn (cảnh "quote") đọc ngay sau lời dẫn, bằng giọng/hiệu ứng của nhân vật
+                qwav = out.with_name(out.stem + "_quote.wav")
+                say_quote(quote, qwav)
+                _concat_with_gap(out, qwav, gap)
+                qwav.unlink(missing_ok=True)
+                log(f"    + trích dẫn bằng giọng {'riêng của ' + pl['who'] if cvoice else 'người dẫn chuyện'}"
+                    + (f", hiệu ứng {vfx}" if vfx != "none" else ""))
+        timing[s["id"]] = {"duration": ffprobe_duration(out), "text": s["narration"], "sig": pl["sig"]}
         project.write_json("timing.json", timing)
 
-    failed: list[tuple[int, dict]] = []
+    failed: list[tuple[int, dict, dict]] = []
     for i, s in enumerate(scenes, 1):
         out = project.path("audio", f"{s['id']}.wav")
         if s.get("locked") and out.exists() and s["id"] in timing:  # cảnh đã khoá: giữ giọng đã chọn
             continue
-        if out.exists() and s["id"] in timing and not (redo and s["id"] in redo) \
-                and timing[s["id"]].get("text") == s["narration"]:
+        pl = plan(s)
+        t = timing.get(s["id"]) or {}
+        # bản đọc cũ (chưa có "sig") được giữ nguyên; đổi cách đọc / hiệu ứng giọng trong editor -> đọc lại cảnh đó
+        if out.exists() and t and not (redo and s["id"] in redo) and t.get("text") == s["narration"] \
+                and t.get("sig", pl["sig"]) == pl["sig"]:
             continue
         try:
-            one(i, s)
+            one(i, s, pl)
         except Exception as e:  # noqa: BLE001  - 1 cảnh lỗi (dịch vụ giọng chập chờn): đọc tiếp cảnh khác, thử lại sau
-            log(f"  ! {s['id']} lỗi ({type(e).__name__}) - để thử lại ở cuối")
-            failed.append((i, s))
-    for i, s in failed:  # thử lại các cảnh lỗi 1 lần nữa
+            log(f"  ! {s['id']} lỗi ({type(e).__name__}: {str(e)[:80]}) - để thử lại ở cuối")
+            failed.append((i, s, pl))
+    for i, s, pl in failed:  # thử lại các cảnh lỗi 1 lần nữa
         try:
-            one(i, s)
+            one(i, s, pl)
         except Exception as e:  # noqa: BLE001
             raise SystemExit(f"Không đọc được cảnh {s['id']} sau nhiều lần thử ({e}). Chạy lại bước Giọng đọc để thử tiếp "
                              "(các cảnh đã xong được giữ nguyên).")

@@ -239,6 +239,22 @@ python studio.py script <slug> --from-text kichban.txt --title "Tên video"
 `voice.polish: true` làm đẹp giọng kiểu phòng thu (EQ ấm, giảm xì, nén, chút không gian) cho mọi engine.
 Kiểm tra giấy phép mô hình trước khi dùng cho kênh bật kiếm tiền.
 
+**Diễn xuất theo cảnh (mọi engine):** mỗi cảnh có `delivery` – `hushed` thì thầm (trước cú hù, chi tiết rợn người),
+`tense` chậm và nén (dồn hồi hộp), `urgent` dồn dập (truy đuổi, hỗn loạn), `grave` trầm nặng (số người chết, kết cục),
+`warm` ấm áp, `normal`. Kịch bản mới tự ghi; kịch bản cũ để `auto` thì tool chọn theo hiệu ứng/ánh sáng của cảnh.
+Edge và Google đổi tốc độ/cao độ ngay lúc đọc; engine khác được chỉnh sau khi đọc. Mức đậm nhạt: `voice.delivery_strength`.
+
+**Giọng nhân vật (`voice_fx`)** cho câu trích dẫn: `radio` bộ đàm / buồng lái, `phone` điện thoại / 911, `tape` băng ghi
+âm, `echo` vọng, `ghost` giọng ma (chỉ truyện hư cấu). Tool tự nhận từ lời dẫn ngay trước câu trích ("the captain
+radioed:", "she dialed 911", "on the confession tape"); câu trích nằm giữa lời dẫn được đọc tách riêng rồi ghép lại.
+Đổi tay trong trang sửa cảnh (ô "Cách đọc", "Giọng nhân vật") → bấm lưu là cảnh đó được đọc lại.
+
+**Gắn ElevenLabs khi có key:** dán key vào ô ElevenLabs trong phần Cài đặt của giao diện web (hoặc dòng
+`ELEVENLABS_API_KEY=` trong file `.env` trên máy bạn – không gửi key cho ai, không đưa lên GitHub) → trong `config.yaml`
+đặt `voice.backend: elevenlabs` (hoặc `voice.en_backend: elevenlabs` chỉ cho video tiếng Anh) và
+`voice.elevenlabs_voice_id` (ID giọng trong Voice Library). Với `eleven_v3`, tool tự thêm thẻ cảm xúc (`[whispers]`…)
+theo cách đọc của cảnh; sửa trong `voice.elevenlabs_tags`. Nên thử 1 video ngắn trước để xem tốn bao nhiêu ký tự.
+
 ### Tiếng Anh (tất cả mã nguồn mở trên GitHub)
 
 | Backend | Repo | Ưu | Nhược |

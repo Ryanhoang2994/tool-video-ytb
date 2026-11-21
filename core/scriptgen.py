@@ -120,6 +120,8 @@ SCENE_SCHEMA = {
                     "music": {"type": "string", "enum": MUSIC_ENUM},
                     "hud": {"type": "string"},
                     "pause_after": {"type": "number"},
+                    "delivery": {"type": "string", "enum": ["auto", "normal", "hushed", "tense", "urgent", "grave", "warm"]},
+                    "voice_fx": {"type": "string", "enum": ["auto", "none", "radio", "phone", "tape", "echo", "ghost"]},
                     "insert": {
                         "type": "object",
                         "properties": {"type": {"type": "string", "enum": INSERT_ENUM}, "time": {"type": "string"},
@@ -138,7 +140,7 @@ SCENE_SCHEMA = {
                 },
                 "required": ["narration", "purpose", "on_screen_text", "visual_type", "action", "camera", "sound",
                              "entity", "character", "figures", "diagram", "stat", "fx", "emphasis", "mood", "music", "hud", "pause_after",
-                             "insert", "sources", "search_queries_en", "image_prompt_en"],
+                             "delivery", "voice_fx", "insert", "sources", "search_queries_en", "image_prompt_en"],
                 "additionalProperties": False,
             },
         }
@@ -177,6 +179,13 @@ STORYBOARD_RULES = """STORYBOARD - mỗi scene điền đủ:
   emphasis: 1-2 cụm từ NGUYÊN VĂN trong narration cần nhấn (con số gây sốc, tên hung thủ, chi tiết đắt giá) -> đúng
   lúc đọc tới: camera giật vào, "boom", chữ đập ra màn hình. Không lạm dụng: tối đa 1 cảnh nhấn / 3-4 cảnh.
   pause_after: giây im lặng sau câu chốt để người xem thấm (0 bình thường, 0.8-1.5 sau câu đắt giá).
+  delivery: CÁCH ĐỌC của người dẫn chuyện cho cảnh - hushed (hạ giọng thì thầm: trước cú hù, chi tiết rợn người, bí mật),
+  tense (chậm, nén: dồn hồi hộp), urgent (nhanh, dồn dập: truy đuổi, hỗn loạn, đếm ngược), grave (trầm, nặng: số người
+  chết, kết cục, phán quyết), warm (ấm: hi vọng, đoàn tụ), normal, auto (tool tự chọn theo fx/mood). Đổi cách đọc theo
+  đường cong cảm xúc của chương, đừng để cả chương một giọng.
+  voice_fx: hiệu ứng cho LỜI NHÂN VẬT trong cảnh "quote" - radio (bộ đàm, buồng lái, đài kiểm soát), phone (điện thoại,
+  cuộc gọi 911, nghe lén), tape (băng ghi âm), echo (vọng: ký ức, giọng trong đầu), ghost (giọng ma - CHỈ truyện hư cấu),
+  none, auto (tool tự nhận theo lời dẫn trước câu trích, vd "the captain radioed:").
   stat: con số gây ấn tượng của cảnh (value là SỐ, label ngắn vd "NGƯỜI ĐƯỢC CỨU", unit vd "m", "%"); value 0 nếu không.
   insert: màn hình chèn khi lời kể nhắc tới - phone (giờ + thông báo: time, date, app, text), clock (đồng hồ báo
   thức: time, text), chat (tin nhắn: messages), bank (số dư: app, text); type "none" nếu không.
@@ -582,7 +591,7 @@ SCENE_DEFAULTS = {"purpose": "", "action": "", "camera": "auto", "sound": "none"
                   "diagram": {"type": "none", "subject": "", "size_m": 0, "depth_m": 0},
                   "character": {"expression": "", "pose": "", "position": "left", "thought": "", "outside": "",
                                 "inside": "", "keywords": [], "framing": "auto", "shadow": ""},
-                  "mood": "auto", "music": "", "hud": "", "pause_after": 0,
+                  "mood": "auto", "music": "", "hud": "", "pause_after": 0, "delivery": "auto", "voice_fx": "auto",
                   "stat": {"value": 0, "label": "", "unit": ""}, "fx": "auto", "emphasis": [],
                   "insert": {"type": "none", "time": "", "date": "", "app": "", "text": "", "messages": []}}
 
@@ -623,7 +632,10 @@ def export_storyboard(project: Project, script: dict) -> None:
                        f"đếm: {sc['hud']}" if sc.get("hud") else "",
                        f"chèn {(sc.get('insert') or {}).get('type')}" if (sc.get("insert") or {}).get("type") not in
                        (None, "", "none") else "",
-                       f"lặng {sc['pause_after']}s" if sc.get("pause_after") else ""] if x)}
+                       f"lặng {sc['pause_after']}s" if sc.get("pause_after") else "",
+                       f"đọc {sc['delivery']}" if sc.get("delivery") not in (None, "", "auto", "normal") else "",
+                       f"giọng nhân vật {sc['voice_fx']}" if sc.get("voice_fx") not in (None, "", "auto", "none")
+                       else ""] if x)}
             rows.append(row)
             md.append(f"**[{sc['id']}]** {row['time']} · *{row['purpose']}* · `{row['visual_type']}` · camera `{row['camera']}`"
                       f" · âm thanh `{row['sound']}`\n\n> {sc['narration']}\n")
@@ -672,7 +684,7 @@ MANUAL_SCENE_EXAMPLE = {
                   "keywords": [], "framing": "auto", "shadow": ""},
     "figures": [], "diagram": {"type": "none", "subject": "", "size_m": 0, "depth_m": 0},
     "stat": {"value": 0, "label": "", "unit": ""}, "fx": "auto", "emphasis": [], "mood": "auto", "music": "",
-    "hud": "", "pause_after": 0,
+    "hud": "", "pause_after": 0, "delivery": "auto", "voice_fx": "auto",
     "insert": {"type": "none", "time": "", "date": "", "app": "", "text": "", "messages": []},
     "sources": [], "search_queries_en": ["english search words"], "image_prompt_en": "english image description"}
 

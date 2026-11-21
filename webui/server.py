@@ -411,7 +411,7 @@ def api_log(slug):
 
 
 SCENE_FIELDS = {"narration", "on_screen_text", "visual_type", "image_prompt_en", "camera", "fx", "mood", "music",
-                "hud", "pause_after", "emphasis", "locked", "sound"}
+                "hud", "pause_after", "emphasis", "locked", "sound", "delivery", "voice_fx"}
 CHAR_FIELDS = {"expression", "pose", "position", "framing", "thought", "shadow", "keywords", "outside", "inside"}
 
 
@@ -438,7 +438,7 @@ def api_scene(slug, sid):
             if k == "pause_after":
                 v = float(v or 0)
             if sc.get(k) != v:
-                if k == "narration":
+                if k in ("narration", "delivery", "voice_fx"):
                     need["voice"] = True
                 if k in ("visual_type", "image_prompt_en"):
                     need["media"] = True
