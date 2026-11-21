@@ -138,6 +138,16 @@ Linux / macOS: `bash install_linux_mac.sh`. Cài xong bấm đúp `start_ui.bat`
 Sau đó: mở `.env` điền API key (file này KHÔNG có trên GitHub, mỗi máy tự điền), sửa `capcut.drafts_dir` trong `config.yaml`.
 Cập nhật tool khi có bản mới: bấm nút **⬆ cập nhật** ở góc trái dưới của giao diện (tự báo khi có bản mới), hoặc bấm đúp `update.bat`. Chỉ tải phần thay đổi, dữ liệu video và `.env` giữ nguyên.
 
+### 1b. Viết kịch bản hàng loạt trên máy bạn
+
+Bấm đúp **`viet_kich_ban.bat`** (máy khác: `python batch.py`): tool lần lượt tìm tư liệu → viết kịch bản → dịch cho mọi
+chủ đề trong `batch/topics/<kênh>.txt`, 2 tập cùng lúc, theo cài đặt từng kênh trong `batch/queue.yaml`.
+- Cần đã đăng nhập Claude Code (lệnh `claude`) – tính vào gói Claude của bạn, không cần API key.
+- Tập đã có kịch bản được bỏ qua. Thêm chủ đề: mở `batch/topics/<kênh>.txt` bằng Notepad, thêm dòng `Chủ đề | năm`.
+- Hết lượt Claude: tool tự chờ tới giờ reset rồi chạy tiếp. Tắt máy / bấm Ctrl+C giữa chừng: bấm đúp lại là chạy tiếp.
+- Trong lúc chạy máy không tự ngủ. Tiến độ: `batch/TIEN_DO.txt` (hoặc `python batch.py --status`), nhật ký từng
+  tập trong `batch/logs/`. Chỉ một kênh: `viet_kich_ban.bat --channel chuyen_ma`.
+
 Dữ liệu video (thư mục `projects/`, `library/`) không đẩy lên GitHub vì rất nặng. Muốn mang một dự án sang máy khác:
 `python studio.py pack <slug>` → chép file .zip sang máy mới → `python studio.py unpack <file.zip>`.
 

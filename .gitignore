@@ -28,3 +28,8 @@ venv/
 # Hệ điều hành
 .DS_Store
 Thumbs.db
+
+# Viết kịch bản hàng loạt: nhật ký / tiến độ trên từng máy
+batch/logs/
+batch/nhat_ky.txt
+batch/TIEN_DO.txt

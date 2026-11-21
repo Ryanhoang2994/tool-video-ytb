@@ -1,0 +1,38 @@
+# Kênh Thảm họa (YouTube Mỹ)
+# Mỗi dòng: Chủ đề | năm  (năm bỏ trống được). Thêm chủ đề mới vào cuối file rồi chạy viet_kich_ban.bat.
+
+Tenerife: The Deadliest Runway in History | 1977
+The Hyatt Regency Walkway Collapse | 1981
+Chernobyl: The Night of April 26 | 1986
+The Sinking of the Lusitania | 1915
+The Galveston Hurricane | 1900
+Japan Air Lines Flight 123 | 1985
+Galloping Gertie: The Tacoma Narrows Bridge | 1940
+Bhopal: The Night the Gas Escaped | 1984
+The Eastland Disaster: Capsized at the Dock | 1915
+The 1906 San Francisco Earthquake | 1906
+United Flight 232: The Sioux City Miracle | 1989
+The St. Francis Dam Failure | 1928
+The Halifax Explosion | 1917
+The Edmund Fitzgerald | 1975
+Mount St. Helens: The Mountain That Exploded | 1980
+Aloha Airlines Flight 243: The Roof Tore Off | 1988
+The Silver Bridge Collapse | 1967
+The Texas City Disaster | 1947
+The Andrea Doria Collision | 1956
+The Tri-State Tornado | 1925
+Air France 447: Lost Over the Atlantic | 2009
+Sampoong Department Store Collapse | 1995
+Piper Alpha: The Oil Platform Inferno | 1988
+MV Doña Paz: The Deadliest Peacetime Sinking | 1987
+The Great Chicago Fire | 1871
+The Gimli Glider: Out of Fuel at 41,000 Feet | 1983
+The Great Boston Molasses Flood | 1919
+Deepwater Horizon | 2010
+Costa Concordia: The Captain Who Left | 2012
+The Peshtigo Fire: America's Deadliest Wildfire | 1871
+The Hindenburg Disaster | 1937
+The Johnstown Flood | 1889
+Three Mile Island: The Meltdown That Almost Was | 1979
+The Sultana Explosion | 1865
+The 2004 Indian Ocean Tsunami | 2004

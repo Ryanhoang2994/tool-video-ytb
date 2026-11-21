@@ -1,0 +1,11 @@
+# Kênh Chuyện ma (Facebook VN) - truyện tự sáng tác
+# Mỗi dòng: Chủ đề | năm  (năm bỏ trống được). Thêm chủ đề mới vào cuối file rồi chạy viet_kich_ban.bat.
+
+Chuyến xe đêm – tập 1
+Làng tôi ngày ấy – tập 1
+Ca trực đêm – tập 1
+Căn nhà số 13 – tập 1
+Chuyến xe đêm – tập 2
+Làng tôi ngày ấy – tập 2
+Ca trực đêm – tập 2
+Căn nhà số 13 – tập 2

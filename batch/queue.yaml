@@ -1,0 +1,47 @@
+# Hàng đợi viết kịch bản trên máy của bạn: bấm đúp viet_kich_ban.bat (hoặc: python batch.py)
+# Tập đã có kịch bản sẽ được bỏ qua -> thêm chủ đề mới vào batch/topics/<kênh>.txt rồi chạy lại là đủ.
+parallel: 2            # số tập viết cùng lúc (2 là vừa với gói Claude Pro/Max)
+
+channels:
+  - name: vu_an
+    preset: crime_doc
+    language: en
+    minutes: 30
+    translate_to: vi   # thêm bản tiếng Việt để bạn đọc hiểu
+    story_type: real_event
+    topics: batch/topics/vu_an.txt
+    notes: batch/notes/vu_an.md
+
+  - name: lich_su
+    preset: crime_doc
+    language: en
+    minutes: 25
+    translate_to: vi
+    story_type: real_event
+    topics: batch/topics/lich_su.txt
+    notes: batch/notes/lich_su.md
+
+  - name: tham_hoa
+    preset: crime_doc
+    language: en
+    minutes: 25
+    translate_to: vi
+    story_type: real_event
+    topics: batch/topics/tham_hoa.txt
+    notes: batch/notes/tham_hoa.md
+
+  - name: chuyen_ma
+    preset: mystery_horror
+    language: vi
+    minutes: 12
+    story_type: fiction
+    topics: batch/topics/chuyen_ma.txt
+    notes: batch/notes/chuyen_ma.md
+
+  - name: me_va_be
+    preset: psychology_2d
+    language: vi
+    minutes: 6
+    story_type: real_event
+    topics: batch/topics/me_va_be.txt
+    notes: batch/notes/me_va_be.md

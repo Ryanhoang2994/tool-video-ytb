@@ -1,0 +1,41 @@
+# Kênh Vụ án (YouTube Mỹ, tiếng Anh + bản dịch tiếng Việt)
+# Mỗi dòng: Chủ đề | năm  (năm bỏ trống được). Thêm chủ đề mới vào cuối file rồi chạy viet_kich_ban.bat.
+
+Pablo Escobar and the Medellin Cartel | 1976-1993
+The Hinterkaifeck Farm Murders | 1922
+The Murder of DEA Agent Kiki Camarena | 1985
+The St. Valentine's Day Massacre | 1929
+The Black Dahlia Murder | 1947
+Griselda Blanco, the Cocaine Godmother | 1970-2012
+Lizzie Borden and the Fall River Axe Murders | 1892
+The D.B. Cooper Hijacking | 1971
+Frank Lucas and Harlem Heroin | 1966-1976
+The Clutter Family Murders in Holcomb, Kansas | 1959
+The Chicago Tylenol Murders | 1982
+Silk Road and the Dark Web Drug Market Case | 2011-2015
+The Axeman of New Orleans | 1918-1919
+The Isabella Stewart Gardner Museum Heist | 1990
+El Chapo Guzman: Escapes and the Trial | 1989-2019
+The Zodiac Killer | 1968-1974
+The Wonderland Murders in Laurel Canyon | 1981
+The Lindbergh Baby Kidnapping | 1932-1936
+Freeway Rick Ross and the Crack Cocaine Era | 1980-1996
+The Boy in the Box of Philadelphia | 1957
+The French Connection Heroin Case | 1960-1972
+The Lake Bodom Murders | 1960
+H. H. Holmes and the Murder Castle | 1886-1896
+The Cocaine Cowboys of Miami | 1979-1986
+The Keddie Cabin Murders | 1981
+The Lufthansa Heist at JFK Airport | 1978
+The Golden State Killer | 1974-2018
+The Servant Girl Annihilator of Austin | 1884-1885
+Manuel Noriega and Operation Just Cause | 1983-1990
+The Somerton Man Mystery | 1948-2022
+The Cambridge Five Spy Ring | 1934-1963
+Aldrich Ames: The CIA's Worst Traitor | 1985-1994
+Robert Hanssen: The Spy Inside the FBI | 1979-2001
+The Rosenbergs and the Atomic Secrets | 1950-1953
+Klaus Fuchs: The Atomic Spy | 1941-1950
+Rudolf Abel, Gary Powers and the Bridge of Spies | 1957-1962
+Oleg Penkovsky: The Spy Who Saved the World | 1961-1963
+Ronald Pelton and Operation Ivy Bells | 1980-1986

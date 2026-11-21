@@ -1,0 +1,81 @@
+# Kênh Lịch sử (YouTube Mỹ)
+# Mỗi dòng: Chủ đề | năm  (năm bỏ trống được). Thêm chủ đề mới vào cuối file rồi chạy viet_kich_ban.bat.
+
+Midway: Five Minutes That Changed the Pacific | 1942
+The Mary Celeste: The Ship Found Empty | 1872
+The Cuban Missile Crisis | 1962
+Charles Ponzi: The Man Behind the Scheme | 1920
+Red Cliffs: The Battle of the Three Kingdoms | 208
+Operation Mincemeat: The Corpse That Fooled Hitler | 1943
+Roanoke: The Lost Colony | 1587-1590
+Stanislav Petrov: The Man Who Saved the World | 1983
+Bernie Madoff: The $65 Billion Lie | 2008
+Cannae: Hannibal's Perfect Battle | 216 BC
+The Fall of Constantinople | 1453
+The Dyatlov Pass Incident | 1959
+The Berlin Airlift | 1948-1949
+Enron: The Smartest Guys in the Room | 2001
+Thermopylae: The 300 | 480 BC
+Fort Sumter: The First Shots | 1861
+The Voynich Manuscript | 15th century
+Able Archer 83: The War Game That Almost Went Real | 1983
+Theranos: The Blood Test That Never Worked | 2003-2018
+Stalingrad: The City That Broke an Army | 1942-1943
+Genghis Khan: How the Mongols Conquered the World | 1206-1227
+Amelia Earhart's Last Flight | 1937
+Sputnik: The Night the Space Race Began | 1957
+Tulip Mania: The First Bubble | 1637
+Operation Gunnerside: Sabotaging Hitler's Heavy Water | 1943
+Hannibal Crosses the Alps | 218 BC
+Flight 19 and the Bermuda Triangle | 1945
+The Bay of Pigs Invasion | 1961
+FTX: The Collapse | 2022
+The Fall of Tenochtitlan | 1521
+The Alamo | 1836
+The Oak Island Money Pit | 1795-present
+Goldsboro 1961: The Day America Almost Nuked Itself | 1961
+Lehman Brothers: The Weekend Wall Street Broke | 2008
+Antietam: America's Bloodiest Day | 1862
+D-Day: The Longest Day | 1944
+The Princes in the Tower | 1483
+Project Azorian: Stealing a Soviet Submarine | 1968-1974
+The South Sea Bubble | 1720
+Admiral Yi Sun-sin: 13 Ships Against 133 | 1597
+The Doolittle Raid | 1942
+The Tunguska Event | 1908
+The Inchon Landing | 1950
+WeWork: The $47 Billion Fall | 2019
+Gaugamela: Alexander Against Persia | 331 BC
+The Siege of Vienna: The Winged Hussars | 1683
+The Lost Army of Cambyses | 524 BC
+Operation Paperclip | 1945-1959
+Wirecard: The Missing Billions | 2020
+Rorke's Drift | 1879
+Gettysburg | 1863
+Kaspar Hauser: The Boy From Nowhere | 1828-1833
+Apollo 11: Winning the Space Race | 1969
+Frank Abagnale: Catch Me If You Can – Or Not? | 1960s
+El Alamein: The Desert Fox Stopped | 1942
+Sekigahara: The Battle That Made the Shogun | 1600
+The Antikythera Mechanism | 2nd century BC
+The Fall of the Berlin Wall | 1989
+Anna Sorokin: The Fake Heiress | 2013-2017
+The Great Escape from Stalag Luft III | 1944
+Teutoburg Forest: Rome's Lost Legions | 9 AD
+Napoleon in Russia: The March to Moscow | 1812
+The Defense of Wake Island | 1941
+The Siege of Vicksburg | 1863
+Kursk: The Largest Tank Battle | 1943
+Tsushima: Japan Sinks the Russian Fleet | 1905
+Operation Entebbe | 1976
+Hastings: The Day England Changed | 1066
+Waterloo: Napoleon's Last Battle | 1815
+Camarón: The Foreign Legion's Last Stand | 1863
+Sherman's March to the Sea | 1864
+The Battle of the Bulge | 1944-1945
+Plassey: How a Company Conquered India | 1757
+The St Nazaire Raid: The Greatest Raid of All | 1942
+Agincourt: Arrows in the Mud | 1415
+The Winter War: Finland Against the Soviet Union | 1939-1940
+The Siege of Masada | 73-74 AD
+The Assassination of Abraham Lincoln | 1865
