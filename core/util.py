@@ -93,6 +93,8 @@ def apply_project(cfg: dict, pj: dict | None) -> dict:
             ch["language"] = pj["language"]
         if pj.get("brand"):
             cfg["render"]["brand"] = pj["brand"]
+        if "channel_name" in pj:  # tên kênh riêng của video (có thể để trống)
+            ch["name"] = pj["channel_name"] or ""
         if pj.get("aspect") in ASPECTS:
             cfg["render"]["width"], cfg["render"]["height"] = ASPECTS[pj["aspect"]]
     ch["words_per_minute"] = resolve_wpm(cfg)

@@ -321,6 +321,8 @@ def main():
     s.add_argument("--story-type", dest="story_type", choices=["fiction", "legend", "real_event"],
                    help="(bí ẩn/kinh dị) hư cấu | truyền thuyết | sự kiện có thật")
     s.add_argument("--brand", help="tên brand kit trong brand/<tên>.yaml (nhân vật, màu, giọng của kênh)")
+    s.add_argument("--channel-name", dest="channel_name",
+                   help='tên kênh nhắc trong lời mời đăng ký; "" = không nêu tên kênh')
     s.set_defaults(fn=cmd_new)
 
     s = sub.add_parser("research", help="research lại / bổ sung nguồn")
@@ -487,6 +489,8 @@ def main():
             v = getattr(a, k, None)
             if v not in (None, ""):
                 meta["project"][k] = v
+        if getattr(a, "channel_name", None) is not None:
+            meta["project"]["channel_name"] = a.channel_name.strip()
     if preset:
         meta["preset"] = preset
     if meta_p and (preset or meta.get("project")):

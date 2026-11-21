@@ -295,6 +295,14 @@ class ClaudeWriter:
 
 # ------------------------------------------------------------------ Claude Code (dùng gói Claude, không cần API key)
 
+def _channel_line(ch: dict) -> str:
+    name = (ch.get("name") or "").strip()
+    if name:
+        return f"Kênh: {name}."
+    return ("Kênh: chưa đặt tên - KHÔNG nhắc tên kênh ở bất kỳ đâu (lời đọc, chữ trên hình, tiêu đề, mô tả, tag); "
+            "lời mời đăng ký chỉ nói 'đăng ký kênh' / 'subscribe to the channel'.")
+
+
 def claude_cli() -> str | None:
     """Đường dẫn lệnh `claude` (Claude Code) nếu đã cài."""
     import shutil
@@ -403,7 +411,7 @@ def build_outline_prompt(research: dict, cfg: dict) -> str:
 
 {project_context(cfg)}
 Chủ đề video: {research['topic']}
-Kênh: {ch['name']}. Ngôn ngữ lời dẫn: {lang}. Thời lượng mục tiêu: {_fmt_minutes(lp['minutes'])} (~{lp['total_words']} từ lời đọc).
+{_channel_line(ch)} Ngôn ngữ lời dẫn: {lang}. Thời lượng mục tiêu: {_fmt_minutes(lp['minutes'])} (~{lp['total_words']} từ lời đọc).
 Phong cách: {sc['style']}
 
 Hãy lập DÀN Ý cho video gồm đúng {lp['chapters']} chương, kể theo trình tự lôi cuốn
@@ -496,8 +504,9 @@ def build_chapter_prompt(research: dict, outline: dict, idx: int, cfg: dict, pre
         ending = ("Kết video bằng MỘT câu chốt hoặc câu hỏi mở thật ngắn (<= 12 từ); không tổng kết, không kêu gọi "
                   "đăng ký dài dòng.")
     else:
-        ending = ("Kết thúc video: tổng kết, câu hỏi còn bỏ ngỏ, mời khán giả bình luận và đăng ký kênh "
-                  + ch["name"] + ".")
+        ending = ("Kết thúc video: tổng kết, câu hỏi còn bỏ ngỏ, mời khán giả bình luận và đăng ký kênh"
+                  + (f" {ch['name']}." if (ch.get("name") or "").strip() else
+                     " (KHÔNG nêu tên kênh, chỉ nói 'đăng ký kênh' / 'subscribe to the channel')."))
     chap = outline["chapters"][idx]
     outline_txt = "\n".join(f"{i + 1}. {c['title']}: {c['summary']}" for i, c in enumerate(outline["chapters"]))
     return f"""<tu_lieu>

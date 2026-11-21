@@ -4,6 +4,7 @@ parallel: 2            # số tập viết cùng lúc (2 là vừa với gói Cl
 
 channels:
   - name: vu_an
+    channel_name: ""   # tên kênh nhắc trong lời mời đăng ký; để trống = chỉ nói "đăng ký kênh"
     preset: crime_doc
     language: en
     minutes: 30
@@ -13,6 +14,7 @@ channels:
     notes: batch/notes/vu_an.md
 
   - name: lich_su
+    channel_name: ""   # tên kênh nhắc trong lời mời đăng ký; để trống = chỉ nói "đăng ký kênh"
     preset: crime_doc
     language: en
     minutes: 25
@@ -22,6 +24,7 @@ channels:
     notes: batch/notes/lich_su.md
 
   - name: tham_hoa
+    channel_name: ""   # tên kênh nhắc trong lời mời đăng ký; để trống = chỉ nói "đăng ký kênh"
     preset: crime_doc
     language: en
     minutes: 25
@@ -31,6 +34,7 @@ channels:
     notes: batch/notes/tham_hoa.md
 
   - name: chuyen_ma
+    channel_name: ""   # tên kênh nhắc trong lời mời đăng ký; để trống = chỉ nói "đăng ký kênh"
     preset: mystery_horror
     language: vi
     minutes: 12
@@ -39,6 +43,7 @@ channels:
     notes: batch/notes/chuyen_ma.md
 
   - name: me_va_be
+    channel_name: ""   # tên kênh nhắc trong lời mời đăng ký; để trống = chỉ nói "đăng ký kênh"
     preset: psychology_2d
     language: vi
     minutes: 6

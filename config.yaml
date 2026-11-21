@@ -3,7 +3,9 @@
 # ============================================================
 
 channel:
-  name: "Hồ Sơ Lạnh"         # tên kênh (dùng trong intro/outro, thumbnail)
+  name: ""                       # tên kênh mặc định (intro, thumbnail, lời mời đăng ký). Để trống = kịch bản chỉ nói
+                                 # "đăng ký kênh", không nêu tên. Mỗi kênh đặt riêng: batch/queue.yaml -> channel_name,
+                                 # hoặc `python studio.py new ... --channel-name "Tên kênh"`
   language: "vi"                 # en | vi  (ngôn ngữ lời dẫn)
   target_minutes: 40             # độ dài mặc định; mỗi video chọn riêng được, từ 0.5 phút (Shorts) tới 180 phút
   words_per_minute: auto         # tốc độ đọc: auto = en 160, vi 170 (đo từ video đã dựng) | hoặc ghi 1 con số

@@ -176,6 +176,7 @@ def do_topic(ch: dict, topic: str, years: str) -> str:
                 a += ["--notes", str(ROOT / ch["notes"])]
             if ch.get("aspect"):
                 a += ["--aspect", ch["aspect"]]
+            a += ["--channel-name", str(ch.get("channel_name") or "")]
             say(f"  {slug}: tìm tư liệu")
         elif st == "script":
             a = ["--preset", preset, "script", slug]
