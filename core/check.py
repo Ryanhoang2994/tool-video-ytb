@@ -203,7 +203,10 @@ def run_check(project: Project, cfg: dict) -> Path:
     tl = project.read_json("timeline.json", {}) or {}
     target = cfg["channel"].get("target_minutes", 10)
     dur = tl.get("duration", 0) / 60
+    errs = project.path("output", "render_errors.txt")
+    err_lines = errs.read_text(encoding="utf-8").splitlines() if errs.exists() else []
     sections = {
+        "Cảnh dựng lỗi (màn hình đen)": [f"{FAIL} {x}" for x in err_lines] or [f"{OK} Không có cảnh nào bị lỗi khi dựng"],
         "Thời lượng": [(OK if abs(dur - target) <= max(1.5, target * 0.2) else WARN)
                        + f" {dur:.1f} phút (mục tiêu {target} phút)"],
         "Chính tả": check_spelling(script, cfg),

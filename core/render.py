@@ -590,6 +590,7 @@ def render_video(project: Project, cfg: dict, workers: int = 0, preview: bool = 
     workers = workers or rc.get("workers") or _auto_workers(rc)
     _THREADS["n"] = max(2, (os.cpu_count() or 4) // workers)  # mỗi ffmpeg chỉ dùng phần CPU của nó -> đỡ ăn RAM
     done = 0
+    failed: list[tuple] = []  # cảnh dựng lỗi (tạm thay bằng nền đen) -> báo rõ ở cuối, không để lọt vào video đăng
     with ThreadPoolExecutor(workers) as ex:
         futs = {ex.submit(render_item, it, out, cfg, plates, labels): (it, out) for it, out in todo}
         for f in as_completed(futs):
@@ -600,6 +601,7 @@ def render_video(project: Project, cfg: dict, workers: int = 0, preview: bool = 
             except Exception as e:  # noqa: BLE001
                 log(f"  ! đoạn {it.get('id', it['type'])} lỗi -> nền đen: {str(e).splitlines()[0][:200]}")
                 out.with_suffix(".failed").write_text(str(e)[-3000:], encoding="utf-8")
+                failed.append((it.get("id", it["type"]), it["start"], str(e).splitlines()[-1][:300]))
                 fr = sum(round((sh["start"] + sh["duration"]) * fps) - round(sh["start"] * fps) for sh in it["shots"])
                 run(["ffmpeg", "-y", "-f", "lavfi", "-i", f"color=c=black:s={rc['width']}x{rc['height']}:r={fps}",
                      "-frames:v", str(fr), *_enc(cfg), str(out)])
@@ -660,6 +662,19 @@ def render_video(project: Project, cfg: dict, workers: int = 0, preview: bool = 
          "-c:a", "aac", "-b:a", "192k", "-shortest", "-movflags", "+faststart", str(out)])
     silent.unlink(missing_ok=True)
     log(f"✓ Video: {out} ({ffprobe_duration(out) / 60:.1f} phút)")
+    err_file = project.path("output", "render_errors.txt")
+    if failed:
+        failed.sort(key=lambda x: x[1])
+        lines = [f"{int(t // 60)}:{int(t % 60):02d}  cảnh {sid}: {msg}" for sid, t, msg in failed]
+        err_file.write_text("\n".join(lines) + "\n", encoding="utf-8")
+        log("=" * 70)
+        log(f"✗ CẢNH BÁO: {len(failed)} cảnh dựng LỖI, đang hiện MÀN HÌNH ĐEN trong video - CHƯA NÊN ĐĂNG:")
+        for ln in lines:
+            log("    " + ln[:160])
+        log(f"  Chạy lại lệnh render để tool dựng lại các cảnh này. Chi tiết: {err_file}")
+        log("=" * 70)
+    else:
+        err_file.unlink(missing_ok=True)
     return out
 
 
