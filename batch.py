@@ -239,6 +239,7 @@ def main() -> None:
     ap.add_argument("--status", action="store_true")
     ap.add_argument("--dry", action="store_true")
     ap.add_argument("--parallel", type=int)
+    ap.add_argument("--yes", action="store_true", help="không hỏi lại trước khi chạy")
     a = ap.parse_args()
     LOGS.mkdir(parents=True, exist_ok=True)
 
@@ -257,6 +258,15 @@ def main() -> None:
         print(status(q, a.channel))
         return
     par = a.parallel or int(q["parallel"])
+    if not a.dry and not a.yes:  # hỏi trước khi viết nhiều tập (mỗi tập tốn lượt Claude)
+        todo_n = {ch["name"]: sum(state(ch, t) != "done" for t, _ in read_topics(ROOT / ch["topics"]))
+                  for ch in q["channels"] if (not a.channel or ch["name"] == a.channel) and ch.get("enabled") is not False}
+        total = sum(todo_n.values())
+        if total > 10 and sys.stdin.isatty():
+            print("Sẽ viết: " + ", ".join(f"{k} {v} tập" for k, v in todo_n.items() if v) + f" (tổng {total}).")
+            print("Nếu đã có kịch bản từ trước, hãy giải nén gói kịch bản vào thư mục projects TRƯỚC để khỏi viết lại.")
+            if input("Gõ y rồi Enter để bắt đầu: ").strip().lower() not in ("y", "yes", "c", "co", "có"):
+                return
     keep_awake(True)
     try:
         for ch in q["channels"]:
